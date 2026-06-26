@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "pandas>=3.0.3",
+    "pika>=1.4.1",
     "python-decouple>=3.8",
     "requests>=2.34.2",
     "rich>=15.0.0",

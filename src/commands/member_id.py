@@ -8,7 +8,7 @@ from requests import Session
 from src.config import get_headers
 from src.decorators import api_caller
 
-member_id_app = typer.Typer(name="memberid")
+app = typer.Typer(name="memberid")
 
 
 class MemberID:
@@ -57,9 +57,7 @@ class MemberID:
         return str(max(sorted_ids) + 1)
 
 
-@member_id_app.command(
-    "next-id", help="Getting the first available ID using a specific prefix."
-)
+@app.command("next-id", help="Getting the first available ID using a specific prefix.")
 def get_next_member_id_command(
     member_id_prefix: str = typer.Argument(
         ..., help="The numerical prefix to filter and search gaps for (e.g. 2)"
@@ -73,6 +71,6 @@ def get_next_member_id_command(
     print(f"[bold green]Next Available ID:[/bold green] {next_id}")
 
 
-@member_id_app.command("validate", help="Check if an existing ID is valid.")
+@app.command("validate", help="Check if an existing ID is valid.")
 def validate_member_id(member_id: str):
     typer.echo(f"Validating ID: {member_id}")
