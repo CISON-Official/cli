@@ -8,10 +8,12 @@ from datetime import datetime
 
 import pika
 import pandas as pd
+from tqdm import tqdm
+from rich import print
 from requests import Session
 
 from src.commands.user import User
-from src.decorators import api_caller
+from src.decorators import api_caller, silence_stdout
 from src.config import get_headers, print_error, setting
 
 app = typer.Typer(name="membership")
@@ -54,24 +56,26 @@ class Membership:
             json=dict(user_id=user_id),
         )
         response.raise_for_status()
+        with open("sleeping.json", "w") as file:
+            ajson.dump(response.json(), file)
         certificates = list(
             filter(
-                lambda x: int(x["member_id"]) == member_id,
+                lambda x: (x["member_id"] == member_id),
                 response.json()["data"],
             )
         )
-
+        print(certificates)
         if len(certificates) == 0:
-            print("User does not have a certificate")
+            print("[red]User does not have a certificate[/red],")
             return False, None
         else:
-            print("User has a certificate")
+            print("[green]User has a certificate[/green]")
             return True, certificates[0]
 
     @api_caller
     @staticmethod
     def create_certificates(
-        member_id: Optional[int] = None, user_id=Optional[int], **kwargs
+        member_id: str, user_id=Optional[int], **kwargs
     ) -> Optional[dict]:
 
         # try:
@@ -87,28 +91,40 @@ class Membership:
 
         print(member_id, user_id)
 
-        status, certificate = Membership.check_for_certificates(user_id=user_id, member_id=member_id)
+        status, certificate = Membership.check_for_certificates(
+            user_id=user_id, member_id=member_id
+        )
         print(certificate)
 
-        if status:
-            print("Process Ended")
-            return
+        if not status:
+            response = session.post(
+                f"{root_url.rstrip('/')}/cert/add-new",
+                headers=get_headers(token),
+                json=dict(user_id=user_id, member_id=member_id),  # type: ignore
+            )
+            response.raise_for_status()
 
-        response = session.post(
-            f"{root_url.rstrip('/')}/cert/add-new",
-            headers=get_headers(token),
+        cert_data = session.get(
+            f"{root_url.rstrip('/')}/certificate",
             json=dict(user_id=user_id),  # type: ignore
+            headers=get_headers(token),
         )
-        response.raise_for_status()
+        cert_data.raise_for_status()
+        new_user = list(
+            filter(
+                lambda x: (x["member_id"] == member_id),
+                cert_data.json()["data"],
+            )
+        )[0]
 
         data = dict(
-            name=f"{certificate['surname']} {certificate['firstname']} {certificate['middlename']}",
+            name=f"{new_user['surname']} {new_user['firstname']} {new_user['middlename']}",
             current_date=datetime.fromtimestamp(
-                float(certificate["date_issued"])
+                float(new_user["date_issued"])
             ).strftime("%d/%m/%Y"),
-            membership_id=str(certificate["member_id"]),
-            certificate_id=str(certificate["cert_id"]),
-            email=certificate["email"],
+            membership_id=str(member_id),
+            certificate_id=str(new_user["cert_id"]),
+            email=new_user["email"],
         )
 
         connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))  # type: ignore
@@ -142,6 +158,32 @@ class Membership:
     # except Exception as e:
     #     print(e)
 
+    @api_caller
+    @staticmethod
+    def list_qualified(**kwargs) -> None:
+
+        session: Session = kwargs["session"]
+        token: str = kwargs["token"]
+        root_url: str = kwargs["root_url"]
+
+        response = session.get(
+            f"{root_url.rstrip('/')}/cert/get-qualified-candidate",
+            headers=get_headers(token),
+            json=dict(email=setting.ADMIN_EMAIL),
+        )
+
+        data = response.json().get("data")
+
+        if not data or len(data) <= 0:
+            print("[green]All users have been Issued Certificates[/green]")
+            return
+
+        for user in data:
+            print(
+                f"[bold red]{user.get("first_name")} with member ID {user.get('member_id')} is eligible[/bold red]"
+            )
+        return
+
 
 @app.command(
     name="have-certificate",
@@ -161,16 +203,33 @@ def create_certificates(
     user_id: Optional[int] = typer.Option(
         None, "--user-id", "-u", help="The actual user ID"
     ),
-    member_id: Optional[int] = typer.Option(
-        None, "--member-id", "-m", help="Member ID of the user"
-    ),
+    member_id: str = typer.Argument(..., help="Member ID of the user"),
 ):
 
     if not user_id and not member_id:
         print_error("Error: You must provide either --user-id or --member-id.")
         raise typer.BadParameter("Missing identifier.")
     print(f"Processing with user_id={user_id} and member_id={member_id}")
-    if user_id:
-        Membership.create_certificates(user_id=user_id, member_id=None)
-        return
     Membership.create_certificates(member_id=member_id, user_id=None)
+
+
+@app.command(
+    name="get-eligible",
+    help="CLI Command to get eligible members for issuing membership certificates",
+)
+def get_eligible():
+    Membership.list_qualified()
+
+
+@app.command(
+    name="bulk-create-certificate",
+    help="CLI command for triggering the bulk creation of membership certificate",
+)
+def create_bulk_certificates(
+    member_ids: list[str] = typer.Argument(..., help="Bulk Member ID of all the users"),
+):
+
+    for i in tqdm(member_ids):
+        with silence_stdout():
+            Membership.create_certificates(member_id=i, user_id=None)
+        # print(i)

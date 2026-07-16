@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-
+import os
+import sys
 from functools import wraps
 from typing import Callable
+from contextlib import contextmanager
 
 from requests import Session
 
@@ -31,3 +33,14 @@ def api_caller(func: Callable) -> Callable:
                 raise Exception("Unable to authenticate user {}".format(response.text))
 
     return wrapper
+
+
+@contextmanager
+def silence_stdout():
+    old_stdout = sys.stdout
+    sys.stdout = open(os.devnull, "w")
+    try:
+        yield
+    finally:
+        sys.stdout.close()
+        sys.stdout = old_stdout

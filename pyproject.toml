@@ -1,7 +1,7 @@
 [project]
 name = "cli"
-version = "0.1.0"
-description = "Add your description here"
+version = "1.1.0"
+description = "CISON CLI Program"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -10,5 +10,6 @@ dependencies = [
     "python-decouple>=3.8",
     "requests>=2.34.2",
     "rich>=15.0.0",
+    "tqdm>=4.68.4",
     "typer>=0.26.7",
 ]
