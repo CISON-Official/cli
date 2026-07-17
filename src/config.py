@@ -14,7 +14,6 @@ def get_headers(token: str) -> dict:
     """Global headers like Authentication."""
     return {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
-
 class Settings:
 
     BASE_URL = config("BASE_URL")

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 
 import uuid
+from time import sleep
+from rich.console import Console
+from rich.table import Table
+
 import typer
 import json as ajson
 from typing import Optional
@@ -11,12 +15,14 @@ import pandas as pd
 from tqdm import tqdm
 from rich import print
 from requests import Session
+from rich.progress import track
 
 from src.commands.user import User
 from src.decorators import api_caller, silence_stdout
 from src.config import get_headers, print_error, setting
 
 app = typer.Typer(name="membership")
+console = Console()
 
 
 class Membership:
@@ -176,13 +182,11 @@ class Membership:
 
         if not data or len(data) <= 0:
             print("[green]All users have been Issued Certificates[/green]")
-            return
+            return data
 
         for user in data:
-            print(
-                f"[bold red]{user.get("first_name")} with member ID {user.get('member_id')} is eligible[/bold red]"
-            )
-        return
+            console.print(f"[green]✔[/green] Found candidate: {user.get("first_name")}")
+        return data
 
 
 @app.command(
@@ -217,8 +221,33 @@ def create_certificates(
     name="get-eligible",
     help="CLI Command to get eligible members for issuing membership certificates",
 )
-def get_eligible():
-    Membership.list_qualified()
+def get_eligible(ctx: typer.Context):
+    loader = ctx.obj
+    loader.update("Retrieving members eligible for membership certificate...")
+
+    if ctx.obj:
+        ctx.obj.stop()
+
+    eligible_members = Membership.list_qualified()
+
+    if len(eligible_members) >= 1:
+        table = Table(title="Eligible Candidates", show_footer=True)
+        table.add_column("Name", style="cyan")
+        table.add_column("Member ID", style="green")
+
+        for member in eligible_members:
+            table.add_row(
+                f"{member['first_name']} {member['last_name']} {member['middle_name']}",
+                member["member_id"],
+            )
+
+        console.print(table)
+
+    else:
+        console.print(
+            "[yellow]⚠ No members are currently eligible for a membership certificate.[/yellow]"
+        )
+        raise typer.Exit(code=0)
 
 
 @app.command(
@@ -226,10 +255,25 @@ def get_eligible():
     help="CLI command for triggering the bulk creation of membership certificate",
 )
 def create_bulk_certificates(
+    ctx: typer.Context,
     member_ids: list[str] = typer.Argument(..., help="Bulk Member ID of all the users"),
 ):
 
-    for i in tqdm(member_ids):
+    loader = ctx.obj
+
+    # 1. Update the generic loader state message
+    loader.update(f"Preparing data structures for {len(member_ids)} members...")
+    sleep(1)
+
+    loader.stop()
+    print()
+
+    for member_id in track(
+        member_ids, description="[bold green]Bulk creating certificates..."
+    ):
         with silence_stdout():
-            Membership.create_certificates(member_id=i, user_id=None)
-        # print(i)
+            Membership.create_certificates(member_id=member_id, user_id=None)
+
+    console.print(
+        "\n[bold green]✔ All certificates have been generated successfully![/bold green]"
+    )
