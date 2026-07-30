@@ -5,9 +5,14 @@ description = "CISON CLI Program"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "cloudflare>=5.6.0",
+    "ipython>=9.15.0",
+    "jinja2>=3.1.6",
     "pandas>=3.0.3",
     "pika>=1.4.1",
+    "py-localtunnel>=1.0.3",
     "python-decouple>=3.8",
+    "questionary>=2.1.1",
     "requests>=2.34.2",
     "rich>=15.0.0",
     "tqdm>=4.68.4",

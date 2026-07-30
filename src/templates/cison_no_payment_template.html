@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>CISON – Overdue Payment Notice</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body style="margin:0; padding:0; background-color:#f5f7fa; font-family:Arial, Helvetica, sans-serif;">
+
+    <table width="100%" style="background-color:#f5f7fa; padding:30px 0;" cellspacing="0" cellpadding="0">
+        <tbody>
+            <tr>
+                <td align="center">
+                    <table width="600"
+                        style="background-color:#ffffff; border-radius:8px; overflow:hidden; border:1px solid #e2e8f0;"
+                        cellspacing="0" cellpadding="0">
+                        <tbody>
+
+                            <!-- Header -->
+                            <tr>
+                                <td
+                                    style="background-color:#054e02; padding:20px 30px; text-align:center; color:#ffffff;">
+                                    <table width="100%" cellspacing="0" cellpadding="0">
+                                        <tbody>
+                                            <tr>
+                                                <td align="center">
+                                                    <table cellspacing="0" cellpadding="0">
+                                                        <tbody>
+                                                            <tr>
+                                                                <td style="padding-right:16px; vertical-align:middle;">
+                                                                    <img width="50"
+                                                                        style="display:block; width:50px; height:auto; border-radius:4px;"
+                                                                        src="https://my.cison.org.ng/members/wp-content/uploads/2024/09/cropped-CISON-Icon.jpg" alt="CISON Logo">
+                                                                </td>
+                                                                <td style="vertical-align:middle; text-align:left;">
+                                                                    <h2
+                                                                        style="margin:0; font-size:18px; color:#ffffff; line-height:1.3;">
+                                                                        Chartered Institute of Statisticians of Nigeria
+                                                                        (CISON)
+                                                                    </h2>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- Subject Banner -->
+                            <tr>
+                                <td style="padding:20px 30px 10px 30px;">
+                                    <h2 style="margin:12px 0 0 0; font-size:22px; color:#1f2933;">
+                                        Regularization of Membership
+                                    </h2>
+                                </td>
+                            </tr>
+
+                            <!-- Body -->
+                            <tr>
+                                <td style="padding:10px 30px 30px 30px; color:#1f2933; font-size:15px; line-height:1.7;">
+                                    <p>Dear {{first_name}},</p>
+                                    <p>
+                                        We hope this message finds you well. We are writing to bring to your urgent
+                                        attention that <strong>no payment has been received</strong> on your
+                                        membership account.
+                                    </p>
+                                    <p>
+                                        Our records show the following dues remain entirely unpaid:
+                                    </p>
+
+                                    <!-- Payment Table -->
+                                    <table width="100%" style="border-collapse:collapse; margin:15px 0; font-size:14px;"
+                                        cellspacing="0" cellpadding="10">
+                                        <thead>
+                                            <tr style="background-color:#054e02; color:#ffffff;">
+                                                <th style="text-align:left; padding:10px 14px;">Payment Item</th>
+                                                <th style="text-align:right; padding:10px 14px;">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for name in fees %}
+                                            <tr style="background-color:#f8fafc;">
+                                                <td style="padding:10px 14px; border-bottom:1px solid #e2e8f0;">
+                                                    <strong>{{name}}</strong>
+                                                </td>
+                                                <td style="padding:10px 14px; border-bottom:1px solid #e2e8f0; text-align:right;">
+                                                    <span style="background-color:#f70303; color:#ffffff; padding:3px 8px; border-radius:4px; font-size:12px; font-weight:bold;">
+                                                        Unpaid
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+
+                                    <!-- CTA Button -->
+                                    <p style="text-align:center; margin:30px 0;">
+                                        <a target="_blank"
+                                            style="background-color:#1cb91c; color:#ffffff; padding:14px 32px; text-decoration:none; font-size:16px; border-radius:6px; display:inline-block; font-weight:bold;"
+                                            href="https://my.cison.org.ng/members/" rel="noopener noreferrer">
+                                            Pay Now
+                                        </a>
+                                    </p>
+
+                                    <p style="font-size:14px; color:#4b5563;">
+                                        If you believe this notice has been sent in error, or if you have already made
+                                        your payment and it has not yet reflected on your account, please do not hesitate to reach out to us; we are happy to help.
+                                    </p>
+
+                                    <!-- Contact -->
+                                    <div style="margin:25px 0; padding:15px; border-top:1px solid #edf2f7; font-size:14px;">
+                                        <p style="margin:0 0 5px 0;"><strong>Need Assistance? Contact us:</strong></p>
+                                        <p style="margin:0; line-height:1.8;">
+                                            📞 Support: <a style="color:#1e40af; text-decoration:none;" href="tel:+2348000000000">+234 (0) 800 000 0000</a><br>
+                                            ✉️ Email: <a style="color:#1e40af; text-decoration:none;" href="mailto:support@cison.org.ng">support@cison.org.ng</a>
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <!-- Mandatory Zoho Legal Compliance Footer (CAN-SPAM Law) -->
+                            <tr>
+                                <td style="background-color:#edf2f7; padding:20px 30px; text-align:center; font-size:12px; color:#64748b; line-height:1.6; border-top:1px solid #e2e8f0;">
+                                    <p style="margin:0 0 8px 0;">
+                                        This email was sent by <strong>Chartered Institute of Statisticians of Nigeria (CISON)</strong>.
+                                    </p>
+                                    <p style="margin:0;">
+                                        You are receiving this notification because of your membership status. <br>
+                                        To stop receiving notifications, you can <a href="$[LI:UNSUBSCRIBE]$" style="color:#1e40af; text-decoration:underline;">unsubscribe</a> 
+                                        or manage your <a href="$[LI:SUB_PREF]$" style="color:#1e40af; text-decoration:underline;">subscription preferences</a> at any time.
+                                    </p>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</body>
+</html>

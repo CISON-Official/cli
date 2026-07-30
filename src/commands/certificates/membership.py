@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
 
 import uuid
-from time import sleep
-from rich.console import Console
-from rich.table import Table
-
-import typer
+import logging
 import json as ajson
+from time import sleep
 from typing import Optional
 from datetime import datetime
 
+
 import pika
+import typer
 import pandas as pd
 from tqdm import tqdm
 from rich import print
 from requests import Session
+from rich.table import Table
 from rich.progress import track
+from rich.console import Console
 
 from src.commands.user import User
 from src.decorators import api_caller, silence_stdout
@@ -23,7 +24,7 @@ from src.config import get_headers, print_error, setting
 
 app = typer.Typer(name="membership")
 console = Console()
-
+logger = logging.getLogger(__name__)
 
 class Membership:
 
@@ -223,7 +224,7 @@ def create_certificates(
 )
 def get_eligible(ctx: typer.Context):
     loader = ctx.obj
-    loader.update("Retrieving members eligible for membership certificate...")
+    logger.info("Retrieving members eligible for membership certificate...")
 
     if ctx.obj:
         ctx.obj.stop()
@@ -262,10 +263,9 @@ def create_bulk_certificates(
     loader = ctx.obj
 
     # 1. Update the generic loader state message
-    loader.update(f"Preparing data structures for {len(member_ids)} members...")
+    logger.info(f"Preparing data structures for {len(member_ids)} members...")
     sleep(1)
 
-    loader.stop()
     print()
 
     for member_id in track(

@@ -1,29 +1,30 @@
+#!/usr/bin/env python3
+import logging
+
 import typer
 
-from src.loader import GlobalLoader
+from src.loader import LoggingManager
+from src.send import app as send_app
+from src.email import app as email_app
 from src.commands.user import app as user_app
 from src.commands.member_id import app as memberid_app
 from src.commands.certificates import app as certificate_app
 
-app = typer.Typer(help="CISON Commandline Interface")
-loader = GlobalLoader()
+LoggingManager.setup_logging(base_dir="logs", log_level=logging.DEBUG)
+
+app = typer.Typer(
+    name="CISON CLI",
+    help="CISON Commandline Interface",
+    no_args_is_help=True,
+    add_completion=True,
+    rich_markup_mode="rich",
+)
 
 app.add_typer(user_app)
+app.add_typer(send_app)
+app.add_typer(email_app)
 app.add_typer(memberid_app)
 app.add_typer(certificate_app)
-
-@app.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
-    """
-    This callback runs BEFORE any command or subcommand executes.
-    """
-    if ctx.invoked_subcommand is not None:
-        ctx.obj = loader
-        cmd_name = ctx.invoked_subcommand
-        loader.start(f"Running '{cmd_name}'... Please wait.")
-    ctx.call_on_close(loader.stop)
-
-
 
 
 if __name__ == "__main__":

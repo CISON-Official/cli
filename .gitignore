@@ -11,3 +11,11 @@ wheels/
 .env
 PEM*
 *.json
+room
+logs
+members.csv
+peaceout.py
+newsletter.html
+server.py
+working.py
+_email.py

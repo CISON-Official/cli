@@ -9,7 +9,7 @@ from requests.exceptions import HTTPError
 
 from src.decorators import api_caller
 from src.config import get_headers, print_error
-from src.gui.display_user import display_user_details
+from src.gui.tables import display_user_details
 
 app = typer.Typer(name="user")
 
@@ -75,6 +75,21 @@ class User:
         except HTTPError:
             print_error("Member ID Could not be found")
             return None
+
+    @api_caller
+    @staticmethod
+    def get_all_users(**kwargs) -> dict:
+        session: Session = kwargs["session"]
+        token: str = kwargs["token"]
+        root_url: str = kwargs["root_url"]
+
+        try:
+            response = session.get(
+                f"{root_url.rstrip('/')}/user",
+                headers=get_headers(token),
+            )
+        except Exception as e:
+            pass
 
 
 @app.command(name="get-memberid")
