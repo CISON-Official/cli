@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 
-import typer
-from rich import print
 from typing import Optional
 
+import typer
+import pandas as pd
+from rich import print
 from requests import Session
 from requests.exceptions import HTTPError
 
+from src.gui.print import print_error_panel
 from src.decorators import api_caller
 from src.config import get_headers, print_error
 from src.gui.tables import display_user_details
+from src.utils import (
+    clean_nigerian_states,
+    create_disk_cached_function,
+    export_member_data_by_state,
+)
 
 app = typer.Typer(name="user")
 
@@ -91,6 +98,61 @@ class User:
         except Exception as e:
             pass
 
+    @api_caller
+    @staticmethod
+    def all_info_about_users(*args, **kwargs) -> Optional[dict]:
+        session: Session = kwargs["session"]
+        token: str = kwargs["token"]
+        root_url: str = kwargs["root_url"]
+
+        try:
+            response = session.get(
+                f"{root_url.rstrip('/')}/data/get-all",
+                headers=get_headers(token),
+            )
+
+            response.raise_for_status()
+
+            return response.json()
+        except HTTPError as e:
+            print(e)
+            print_error_panel("Http Error Experienced Here")
+            return None
+            # typer.Exit()
+
+    @staticmethod
+    def rename_columns(dp: pd.DataFrame) -> pd.DataFrame:
+        return dp.rename(
+            columns={
+                "1": "first_name",
+                "3": "nickname",
+                "877": "company",
+                "873": "job_title",
+                "6": "marital_status",
+                "557": "gender",
+                "561": "dob",
+                "5": "phone_no",
+                "917": "country",
+                "22": "address_1",
+                "888": "nsa_member_id",
+                "21": "company_address",
+                "276": "state",
+                "25": "city",
+                "24": "postcode",
+                "23": "address_2",
+                "1425": "profession_status",
+                "859": "education_type_1",
+                "840": "education_type_2",
+                "839": "course_major",
+                "836": "education_location",
+                "835": "education_institution",
+                "2": "last_name",
+                "538": "title",
+                "864": "middle_name",
+                "894": "member_id",
+            }
+        )
+
 
 @app.command(name="get-memberid")
 def get_user_id_from_member_id(
@@ -115,3 +177,18 @@ def get_user_information_from_member_id(
         response2 = User.get_user_information(response1)
         if response2:
             display_user_details(response2)
+
+
+@app.command(name="state", help="categorize the users into states")
+def get_states_for_users():
+    get_cached_user_info = create_disk_cached_function(
+        User.all_info_about_users, cache_directory=".user_data_cache"
+    )
+    response = get_cached_user_info() 
+    
+    if response:
+        # print(response['data'][0])
+        data = User.rename_columns(pd.DataFrame(response["data"]))
+        
+        data["state"] = data["state"].apply(clean_nigerian_states)
+        export_member_data_by_state(data, "state")
