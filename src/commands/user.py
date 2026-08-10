@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+import tqdm
 import typer
 import pandas as pd
 from rich import print
@@ -92,11 +93,14 @@ class User:
 
         try:
             response = session.get(
-                f"{root_url.rstrip('/')}/user",
+                f"{root_url.rstrip('/')}/all-users",
                 headers=get_headers(token),
             )
+            response.raise_for_status()
+            return response.json()
         except Exception as e:
-            pass
+            print_error_panel(str(e))
+            typer.Exit(1)
 
     @api_caller
     @staticmethod
@@ -184,11 +188,73 @@ def get_states_for_users():
     get_cached_user_info = create_disk_cached_function(
         User.all_info_about_users, cache_directory=".user_data_cache"
     )
-    response = get_cached_user_info() 
-    
+    response = get_cached_user_info()
+
     if response:
         # print(response['data'][0])
         data = User.rename_columns(pd.DataFrame(response["data"]))
-        
+
         data["state"] = data["state"].apply(clean_nigerian_states)
         export_member_data_by_state(data, "state")
+
+
+@app.command(name="search", help="Search for anything in the user details")
+def search(
+    ctx: typer.Context,
+    value: str = typer.Argument(..., help="value you want to search"),
+):
+    get_cached_user_info = create_disk_cached_function(
+        User.all_info_about_users, cache_directory=".cache/users"
+    )
+    user = get_cached_user_info()
+
+    data = pd.DataFrame(user['data'])
+
+    if data.empty:
+        print("User database is empty.")
+        raise typer.Exit()
+
+
+    matching_mask = data.astype(str).apply(
+        lambda col: col.str.contains(value, case=False, na=False)
+    )
+
+    matching_rows = data[matching_mask.any(axis=1)]
+
+    if len(matching_rows) > 0:
+        print(f"\nFound {len(matching_rows)} Occurrence(s):\n")
+
+        safe_value = "".join(
+            c for c in value if c.isalnum() or c in (" ", "_", "-")
+        ).rstrip()
+        file_name = f"search_{safe_value}.csv"
+        print(matching_rows.head())
+        matching_rows = User.rename_columns(matching_rows)
+        matching_rows = matching_rows[
+            ["first_name", "last_name", "middle_name", "member_id", "marital_status"]
+        ]
+        matching_rows.to_csv(file_name, index=False)
+        print(f"\nResults exported to {file_name}")
+    else:
+        print("Found Nothing")
+
+
+@app.command(
+    name="vmwcp", help="Valid members holding certificate and complete payment"
+)
+def complete_payment_with_certificates():
+    from src.commands.certificates.membership import Membership
+
+    get_cached_certificates = create_disk_cached_function(
+        Membership.get_all_certificates, cache_directory=".cache/certificates"
+    )
+
+    complete = []
+    certs = get_cached_certificates()
+    for i in tqdm.tqdm(certs["data"]):
+        user_info = User.get_user_information(i["user_id"])
+        if all(user_info["paid_fees"].values()):
+            complete.append(i)
+
+    df = pd.DataFrame(complete)
+    df.to_csv("complete.csv")
