@@ -19,3 +19,8 @@ newsletter.html
 server.py
 working.py
 _email.py
+data
+.cache
+.user_data_cache
+*.zip
+*.csv
