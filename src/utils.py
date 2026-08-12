@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
+import os
 import time
+import shutil
+from pdb import set_trace
 from itertools import permutations
+from typing import Any, Callable
 
+import pandas as pd
 from rich.live import Live
 from rich.text import Text
+from diskcache import Cache
 
 
 def count_occurenance(data: dict) -> dict:
@@ -66,3 +72,208 @@ def count_down(x: int) -> None:
 
     finally:
         session.stop()
+
+
+def clean_nigerian_states(value):
+    if (
+        not isinstance(value, str)
+        or value.strip() == ""
+        or value.lower()
+        in [
+            "nil",
+            "nigeria",
+            "state",
+            "09",
+            "26",
+            "042",
+            "married",
+            "hampshire",
+            "georgia",
+            "gauteng",
+            "northern europe",
+            "western",
+        ]
+    ):
+        return "Unknown"
+
+    val = value.strip().upper()
+
+    mapping = {
+        "AB": "Abia",
+        "AD": "Adamawa",
+        "AK": "Akwa Ibom",
+        "Àkwa Ibom": "Akwa Ibom",
+        "AQ": "Akwa Ibom",
+        "AN": "Anambra",
+        "BA": "Bauchi",
+        "BY": "Bayelsa",
+        "BE": "Benue",
+        "BO": "Borno",
+        "CR": "Cross River",
+        "CRS": "Cross River",
+        "DE": "Delta",
+        "EB": "Ebonyi",
+        "ED": "Edo",
+        "EK": "Ekiti",
+        "EN": "Enugu",
+        "GO": "Gombe",
+        "IM": "Imo",
+        "JI": "Jigawa",
+        "KD": "Kaduna",
+        "KN": "Kano",
+        "KT": "Katsina",
+        "KE": "Kebbi",
+        "KO": "Kogi",
+        "KW": "Kwara",
+        "LA": "Lagos",
+        "NA": "Nasarawa",
+        "NI": "Niger",
+        "OG": "Ogun",
+        "ON": "Ondo",
+        "OS": "Osun",
+        "OY": "Oyo",
+        "PL": "Plateau",
+        "RI": "Rivers",
+        "SO": "Sokoto",
+        "TA": "Taraba",
+        "YO": "Yobe",
+        "ZA": "Zamfara",
+        "FC": "FCT",
+        "FCT": "FCT",
+    }
+
+    fct_variants = [
+        "ABUJA",
+        "FEDERAL CAPITAL TERRITORY",
+        "F.C.T",
+        "F C T",
+        "FDERAL CAPITAL TERITORY",
+        "FCT",
+        "Federal Capital",
+    ]
+    if any(x in val for x in fct_variants):
+        return "FCT"
+
+    if val in mapping:
+        return mapping[val]
+
+    if val.endswith(" STATE"):
+        val = val.replace(" STATE", "")
+
+    if val == "EBONY":
+        val = "EBONYI"
+    if val == "KOGI":
+        val = "KOGI"
+
+    return val.title()
+
+
+def export_member_data_by_state(df: pd.DataFrame, state_column_name: str, dir="data"):
+    """
+    Cleans states, creates a directory, and saves filtered columns into state-specific CSVs.
+    """
+    main = "state"
+    output_dir = f"{dir}/{main}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        print(f"Created directory: {output_dir}")
+
+    target_cols = [
+        "first_name",
+        "middle_name",
+        "last_name",
+        "title",
+        "member_id",
+        "gender",
+        "marital_status",
+        "job_title",
+        "phone_no",
+    ]
+
+    table = {"nigeria": clean_nigerian_states}
+
+    for country in df.country.unique():
+        demo_output = f"{output_dir}/{country}"
+        os.makedirs(demo_output, exist_ok=True)
+        print(f"Starting {country} ->")
+        if clean_function := table.get(country.lower()):
+            df["cleaned_state"] = df[state_column_name].apply(clean_function)
+
+            for state, group in df.groupby("cleaned_state"):
+                if state == "Unknown" or "-" in state:  # type: ignore
+                    continue
+
+                available_cols = [c for c in target_cols if c in group.columns]
+                state_df = group[available_cols]
+
+                file_name = f"{state.replace(' ', '_')}.csv"  # type: ignore
+                file_path = os.path.join(demo_output, file_name)
+
+                state_df.to_csv(file_path, index=False)
+                print(f"\tSaved: {file_name}")
+
+            print("Zipping ...")
+            zip_directory(demo_output, f"cison_states_members_{country}")
+
+
+def create_disk_cached_function(
+    api_func: Callable[..., Any], cache_directory: str = ".cli_cache"
+) -> Callable[..., Any]:
+    """Wraps any function with a persistent disk-backed cache."""
+    cache = Cache(cache_directory)
+    return cache.memoize(expire=5_000_000)(api_func)
+
+
+def zip_directory(folder_to_zip: str, output_zip_filename: str):
+    """
+    Zips a target folder completely.
+
+    :param folder_to_zip: Path to the folder you want to compress.
+    :param output_zip_filename: Name of the output file (do not include '.zip').
+    """
+    shutil.make_archive(output_zip_filename, "zip", folder_to_zip)
+    print(f"Successfully created: {output_zip_filename}.zip")
+
+def convert_to_vcf(data: pd.DataFrame, root_dir: str, filename: str = "all_contacts.vcf", suffix="CISON") -> bool:
+    """
+    Combines an entire DataFrame of users into ONE single .vcf file 
+    that imports all contacts simultaneously when opened on a phone.
+    """
+    main_dir = os.path.join("data", "vcf", root_dir)
+
+    os.makedirs(main_dir, exist_ok=True)
+    
+    output_file_path = os.path.join(main_dir, filename)
+    
+    try:
+        #
+        with open(output_file_path, "w", encoding="utf-8") as f:
+            
+            for row in data.itertuples(index=False):
+                first = getattr(row, 'first_name', '') or ''
+                last = getattr(row, 'last_name', '') or ''
+                middle = getattr(row, 'middle_name', '') or ''
+                company = getattr(row, 'company', '') or ''
+                phone = getattr(row, 'phone_no', '') or ''
+                title = getattr(row, 'title', '') or ''
+                suffix = suffix if suffix else ""
+                
+                vcard_lines = [
+                    "BEGIN:VCARD",
+                    "VERSION:3.0",
+                    f"N:{last};{first};{middle} {suffix};;",
+                    f"FN:{first} {middle} {last} {suffix}".replace("  ", " ").strip(),
+                    f"ORG:{company}",
+                    f"TITLE:{title}",
+                    f"TEL;TYPE=CELL;TYPE=VOICE:{phone}",
+                    "END:VCARD"
+                ]
+                
+                f.write("\n".join(vcard_lines) + "\n\n")
+                
+        print(f"Successfully created master VCF file at: {output_file_path}")
+        return True
+        
+    except Exception as e:
+        print(f"Error while creating master vcard: {e}")
+        return False
