@@ -5,7 +5,6 @@ from src.__email import get_access_token, get_email_header
 
 
 class EmailBase:
-
     def __init__(self) -> None:
 
         self.access_token = get_access_token()

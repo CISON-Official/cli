@@ -3,6 +3,7 @@ import os
 import logging
 from datetime import datetime
 
+
 class ChronologicalFolderHandler(logging.Handler):
     def __init__(self, base_dir="logs"):
         super().__init__()
@@ -25,6 +26,7 @@ class ChronologicalFolderHandler(logging.Handler):
         except Exception:
             self.handleError(record)
 
+
 class LoggingManager:
     @staticmethod
     def setup_logging(base_dir: str = "logs", log_level: int = logging.INFO) -> None:
@@ -33,7 +35,9 @@ class LoggingManager:
 
         root_logger.handlers.clear()
 
-        log_formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        log_formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
 
         console_handler = logging.StreamHandler()
         console_handler.setFormatter(log_formatter)

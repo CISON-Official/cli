@@ -56,7 +56,6 @@ def display_products(data: dict) -> None:
 
 
 class EmailTopic(EmailBase):
-
     def get_topics(
         self,
         from_index: Optional[int] = None,
@@ -71,9 +70,7 @@ class EmailTopic(EmailBase):
 
             if details:
                 self.params["details"] = (
-                    "{"
-                    + ",".join(f"{k}:{v}" for k, v in details.items())
-                    + "}"
+                    "{" + ",".join(f"{k}:{v}" for k, v in details.items()) + "}"
                 )
 
             response = requests.get(
@@ -109,9 +106,7 @@ class EmailTopic(EmailBase):
 
             if details:
                 self.params["details"] = (
-                    "{"
-                    + ",".join(f"{k}:{v}" for k, v in details.items())
-                    + "}"
+                    "{" + ",".join(f"{k}:{v}" for k, v in details.items()) + "}"
                 )
 
             response = requests.get(
@@ -199,9 +194,7 @@ def create_topic() -> None:
     topic_name = questionary.text(
         "What is the name of the topic you want to create?"
     ).ask()
-    topic_desc = questionary.text(
-        "Enter a description for this topic:"
-    ).ask()
+    topic_desc = questionary.text("Enter a description for this topic:").ask()
 
     is_brand_product = questionary.confirm(
         "Is this a brand product topic? (requires a Product ID)",
@@ -210,9 +203,7 @@ def create_topic() -> None:
 
     product_id: Optional[str] = None
     if is_brand_product:
-        product_id = questionary.text(
-            "Enter the Product ID for this topic:"
-        ).ask()
+        product_id = questionary.text("Enter the Product ID for this topic:").ask()
 
     topic.create_topic(
         topic_name=topic_name, topic_desc=topic_desc, product_id=product_id

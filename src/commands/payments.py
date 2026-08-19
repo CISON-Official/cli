@@ -8,7 +8,6 @@ from src.decorators import api_caller
 
 
 class Payments:
-
     @api_caller
     @staticmethod
     def get_users_with_partial_payments(**kwargs) -> pd.DataFrame:
@@ -37,7 +36,6 @@ class Payments:
         root_url: str = kwargs["root_url"]
 
         try:
-
             response = session.get(
                 f"{root_url.rstrip('/')}/data/users/no-payment-latest",
                 headers=get_headers(token),
@@ -70,4 +68,3 @@ class Payments:
         except Exception as e:
             print(e)
             raise typer.Exit(1)
-    

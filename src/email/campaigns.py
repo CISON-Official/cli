@@ -49,7 +49,6 @@ RecipientAction = Literal[
 
 
 class EmailCampaign(EmailBase):
-
     def single_campaigns(
         self, campaignkey: str, campaigntype: Literal["normal", "abtesting"]
     ) -> list:
@@ -114,17 +113,18 @@ class EmailCampaign(EmailBase):
             return []
 
     def create_campaign(
-    self,
+        self,
         campaign_name: str,
         subject: str,
         list_details: list[str],
         content_url: str,
     ) -> Optional[str]:
         try:
-            
             list_details_dict = {list_key: [] for list_key in list_details}
-            
-            list_details_json_string = json.dumps(list_details_dict, separators=(',', ':')) 
+
+            list_details_json_string = json.dumps(
+                list_details_dict, separators=(",", ":")
+            )
 
             self.params["campaignname"] = campaign_name
             self.params["subject"] = subject
@@ -132,7 +132,7 @@ class EmailCampaign(EmailBase):
             self.params["from_email"] = str(setting.EMAIL_ADMIN)
             self.params["from_name"] = str(setting.PROGRAM_NAME)
             self.params["topicId"] = "1448394000000047017"
-            
+
             self.params["list_details"] = list_details_json_string
 
             response = requests.post(
@@ -143,10 +143,11 @@ class EmailCampaign(EmailBase):
 
             response.raise_for_status()
             data = response.json()
-            
-            
+
             if data.get("code") == "200":
-                print_success_panel(f"Successfully created campaign with ID: {data.get('campaignKey')}")
+                print_success_panel(
+                    f"Successfully created campaign with ID: {data.get('campaignKey')}"
+                )
                 return data.get("campaignKey")
             else:
                 print_error_panel(f"API Error during creation: {data}")
@@ -155,18 +156,18 @@ class EmailCampaign(EmailBase):
         except requests.exceptions.HTTPError as e:
             print_error_panel(f"HTTP Error while creating campaigns: {e}")
             # Print response text for debugging
-            if hasattr(e, 'response') and e.response is not None:
+            if hasattr(e, "response") and e.response is not None:
                 print_error_panel(f"Response: {e.response.text}")
             return None
         except Exception as e:
             print_error_panel(f"Unexpected error: {e}")
-            return None   
+            return None
 
     def send_campaign(self, campaignkey: str, list_details=[]) -> bool:
         try:
             list_details_dict = {list_key: [] for list_key in list_details}
             list_details_json_string = json.dumps(list_details_dict)
-            
+
             self.params["resfmt"] = "JSON"
             self.params["campaignkey"] = campaignkey
             self.params["list_details"] = list_details_json_string
@@ -459,7 +460,7 @@ class EmailCampaign(EmailBase):
 
 @app.command("single")
 def single_campaigns(
-    campaignkey: str = typer.Argument(..., help="unique campaign key")
+    campaignkey: str = typer.Argument(..., help="unique campaign key"),
 ) -> None:
     campaign = EmailCampaign()
     campaigntype: Literal["normal", "abtesting"] = questionary.select(
@@ -536,21 +537,26 @@ def create_campaign():
 
 @app.command("send", help="send a campaign immediately")
 def send_campaign(
-    campaignkey: str = typer.Argument(..., help="unique campaign key")
+    campaignkey: str = typer.Argument(..., help="unique campaign key"),
 ) -> None:
     campaign = EmailCampaign()
     list_details = questionary.text(
-            "Enter the unique list key or identifier for your custom mailing list:"
-        ).ask()
+        "Enter the unique list key or identifier for your custom mailing list:"
+    ).ask()
     if questionary.confirm(
         f"Are you sure you want to send campaign {campaignkey} now?", default=False
     ).ask():
-        campaign.send_campaign(campaignkey, [list_details,])
+        campaign.send_campaign(
+            campaignkey,
+            [
+                list_details,
+            ],
+        )
 
 
 @app.command("schedule", help="schedule a campaign to send at a future date/time")
 def schedule_campaign(
-    campaignkey: str = typer.Argument(..., help="unique campaign key")
+    campaignkey: str = typer.Argument(..., help="unique campaign key"),
 ) -> None:
     campaign = EmailCampaign()
 
@@ -576,7 +582,7 @@ def schedule_campaign(
 
 @app.command("clone", help="clone an existing campaign")
 def clone_campaign(
-    oldcampaignkey: str = typer.Argument(..., help="campaign key to clone from")
+    oldcampaignkey: str = typer.Argument(..., help="campaign key to clone from"),
 ) -> None:
     campaign = EmailCampaign()
 
@@ -598,7 +604,7 @@ def clone_campaign(
 
 @app.command("reports", help="get the report summary for a campaign")
 def campaign_reports(
-    campaignkey: str = typer.Argument(..., help="unique campaign key")
+    campaignkey: str = typer.Argument(..., help="unique campaign key"),
 ) -> None:
     campaign = EmailCampaign()
     campaign.campaign_reports(campaignkey)
@@ -618,7 +624,7 @@ def last_campaign_report() -> None:
 
 @app.command("recipients", help="get campaign recipients data by action type")
 def campaign_recipients_data(
-    campaignkey: str = typer.Argument(..., help="unique campaign key")
+    campaignkey: str = typer.Argument(..., help="unique campaign key"),
 ) -> None:
     action_choices = [
         "sentcontacts",
@@ -641,7 +647,7 @@ def campaign_recipients_data(
 
 @app.command("coupon-details", help="view details for a coupon code")
 def view_coupon_details(
-    couponcode: str = typer.Argument(..., help="coupon code")
+    couponcode: str = typer.Argument(..., help="coupon code"),
 ) -> None:
     campaign = EmailCampaign()
     campaign.view_coupon_details(couponcode)
@@ -660,7 +666,7 @@ def change_coupon_status(
 
 @app.command("delete", help="delete a campaign using the campaign key")
 def delete_campaign(
-    campaignkey: str = typer.Argument(..., help="unique campaign key")
+    campaignkey: str = typer.Argument(..., help="unique campaign key"),
 ) -> None:
     if questionary.confirm(
         f"Are you sure you want to delete campaign {campaignkey}?", default=False

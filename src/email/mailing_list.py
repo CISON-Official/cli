@@ -31,7 +31,6 @@ def _build_contactinfo(
 
 
 class MailingList(EmailBase):
-
     def get_mailing_list(
         self,
         id: Optional[str] = None,
@@ -306,7 +305,7 @@ class MailingList(EmailBase):
         lastname: Optional[str] = None,
         source: Optional[str] = None,
         topic_id: Optional[str] = None,
-        payload:Optional[dict] = None,
+        payload: Optional[dict] = None,
     ) -> bool:
         self.params["listkey"] = listkey
         self.params["resfmt"] = "JSON"
@@ -581,7 +580,10 @@ def get_list_advanced_details(
 ):
     mailing_list = MailingList()
     mailing_list.get_list_advanced_details(
-        listkey=listkey, filtertype=filtertype, fromindex=fromindex, range=range  # type: ignore
+        listkey=listkey,
+        filtertype=filtertype,
+        fromindex=fromindex,
+        range=range,  # type: ignore
     )
 
 
@@ -597,7 +599,11 @@ def get_list_contacts(
 ):
     mailing_list = MailingList()
     mailing_list.get_list_contacts(
-        listkey=listkey, sort=sort, status=status, fromindex=fromindex, range=range  # type: ignore
+        listkey=listkey,
+        sort=sort,
+        status=status,
+        fromindex=fromindex,
+        range=range,  # type: ignore
     )
 
 
@@ -766,5 +772,7 @@ def create_custom_field(
 ):
     mailing_list = MailingList()
     mailing_list.create_custom_field(
-        fieldname=fieldname, fieldtype=fieldtype, fieldlength=fieldlength  # type: ignore
+        fieldname=fieldname,
+        fieldtype=fieldtype,
+        fieldlength=fieldlength,  # type: ignore
     )

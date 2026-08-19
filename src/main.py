@@ -70,7 +70,7 @@ def main_check(ctx: typer.Context):
 def configure(
     overwrite: bool = typer.Option(
         False, "--overwrite", "-o", help="Overwrite existing configuration from scratch"
-    )
+    ),
 ):
     """
     Dynamically configure all environment variables defined in Settings.
@@ -86,11 +86,9 @@ def configure(
     env_data = {}
     keys = get_setting_keys()
 
-    
     sensitive_keywords = ["SECRET", "KEY", "TOKEN", "PASSWORD"]
 
     for key in keys:
-        
         existing_val = ""
         if cfg and not overwrite:
             existing_val = cfg(key, default="")
@@ -193,13 +191,11 @@ def config_show():
     console.print()
 
 
-
-
 @config_app.command("cache-clear")
 def cache_clear(
     force: bool = typer.Option(
         False, "--force", "-f", help="Force cache clearance without confirmation prompt"
-    )
+    ),
 ):
     """
     Clear all persistent disk-backed cache files (~/.cison/.cache/).
@@ -217,7 +213,9 @@ def cache_clear(
             raise typer.Abort()
 
     clear_disk_cache()
-    typer.secho("✓ Successfully cleared all disk cache files!", fg=typer.colors.GREEN, bold=True)
+    typer.secho(
+        "✓ Successfully cleared all disk cache files!", fg=typer.colors.GREEN, bold=True
+    )
 
 
 if __name__ == "__main__":

@@ -31,7 +31,6 @@ logger = logging.getLogger(__name__)
 
 
 class Membership:
-
     @api_caller
     @staticmethod
     def get_membership_certificate(user_id: int, **kwargs) -> Optional[dict[str, str]]:
@@ -71,7 +70,7 @@ class Membership:
             ajson.dump(response.json(), file)
         certificates = list(
             filter(
-                lambda x: (x["member_id"] == member_id),
+                lambda x: x["member_id"] == member_id,
                 response.json()["data"],
             )
         )
@@ -123,7 +122,7 @@ class Membership:
         cert_data.raise_for_status()
         new_user = list(
             filter(
-                lambda x: (x["member_id"] == member_id),
+                lambda x: x["member_id"] == member_id,
                 cert_data.json()["data"],
             )
         )[0]
@@ -138,7 +137,9 @@ class Membership:
             email=new_user["email"],
         )
 
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host="localhost"))  # type: ignore
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(host="localhost")
+        )  # type: ignore
         channel = connection.channel()
         task_id = str(uuid.uuid4())
 
@@ -190,7 +191,7 @@ class Membership:
             return data
 
         for user in data:
-            console.print(f"[green]✔[/green] Found candidate: {user.get("first_name")}")
+            console.print(f"[green]✔[/green] Found candidate: {user.get('first_name')}")
         return data
 
     @api_caller
@@ -216,7 +217,7 @@ class Membership:
     help="Checking whether a user with member_id have certificate",
 )
 def checking_if_a_user_have_certificate(
-    member_id=typer.Argument(..., help="member_id of a user to get the actual ID")
+    member_id=typer.Argument(..., help="member_id of a user to get the actual ID"),
 ):
     Membership.check_for_certificates(member_id)
 

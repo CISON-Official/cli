@@ -92,7 +92,7 @@ def send_payment_notification(
     html = generate_html(dict(fees=format_fee_list(fees)))
     logger.info("HTML generated..")
     file_name = (
-        f"outstanding_payments{str(datetime.now().timestamp()).replace(".", "")}.html"
+        f"outstanding_payments{str(datetime.now().timestamp()).replace('.', '')}.html"
     )
 
     with open(f"{root_dir}/{file_name}", "w") as file:
@@ -198,7 +198,7 @@ def send_payment_notification_for_zero_payment():
 
         html = generate_html(dict(fees=format_fee_list(fees)))
         logger.info("HTML generated..")
-        file_name = f"outstanding_payments{str(datetime.now().timestamp()).replace(".", "")}.html"
+        file_name = f"outstanding_payments{str(datetime.now().timestamp()).replace('.', '')}.html"
 
         with open(f"{root_dir}/{file_name}", "w") as file:
             file.write(html)
@@ -211,7 +211,7 @@ def send_payment_notification_for_zero_payment():
         count = len(correct_users) // int(setting.MAILINGLIST_LIMIT)
         for j in range(0, count + 1):
             segment_user = correct_users[j : (j + 1) * int(setting.MAILINGLIST_LIMIT)]
-            mailing=MailingList()
+            mailing = MailingList()
             mailinglist = mailing.create_mailing_list(
                 emailids=[w.user_email for w in segment_user[:10]],
                 listname=f"mailinglist {datetime.now().timestamp()}".replace(
@@ -271,7 +271,7 @@ def send_conference_remainder(
         template = Template(html_content)
         rendered_html = template.render()
 
-        file_name = f"conference_reminder-{str(datetime.now().timestamp()).replace(".", "").replace(" ", "_")}.html"
+        file_name = f"conference_reminder-{str(datetime.now().timestamp()).replace('.', '').replace(' ', '_')}.html"
 
         with open(f"room/{file_name}", "w") as file:
             file.write(rendered_html)

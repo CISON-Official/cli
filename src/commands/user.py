@@ -27,7 +27,6 @@ app = typer.Typer(name="user")
 
 
 class User:
-
     @api_caller
     @staticmethod
     def get_user_id_from_member_id(member_id: int, **kwargs) -> Optional[None]:
@@ -226,7 +225,7 @@ class User:
 
 @app.command(name="get-memberid")
 def get_user_id_from_member_id(
-    member_id=typer.Argument(..., help="member_id of a user to get the actual ID")
+    member_id=typer.Argument(..., help="member_id of a user to get the actual ID"),
 ):
     User.get_user_id_from_member_id(member_id)
 
@@ -240,7 +239,7 @@ def get_user_information(user_id=typer.Argument(..., help="The actual ID of a us
 
 @app.command(name="uifmid", help="User Information from Member ID")
 def get_user_information_from_member_id(
-    member_id=typer.Argument(..., help="member_id of a user to get the actual ID")
+    member_id=typer.Argument(..., help="member_id of a user to get the actual ID"),
 ):
     response1 = User.get_user_id_from_member_id(member_id)
     if response1:
@@ -433,7 +432,7 @@ def get_complete_payments(
     )
 
     data = function()
-    
+
     if data is None:
         raise typer.Exit(code=1)
 

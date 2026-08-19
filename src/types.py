@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 @dataclass
 class Payments:
-
     user_id: int
     member_id: str
     first_name: str

@@ -13,10 +13,10 @@ def handle_error(error_data: dict) -> None:
     """
     error_code = error_data.get("code")
     # print(error_data)
-    
+
     try:
         code_input = int(error_code)  # type: ignore
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         code_input = 0
 
     match code_input:
@@ -36,8 +36,8 @@ def handle_error(error_data: dict) -> None:
                 "Check your filtering criteria, view IDs, or campaign status limits."
             )
             print_warning_panel(message=message, title=title)
-            raise typer.Exit(0) 
-        
+            raise typer.Exit(0)
+
         case 0:
             pass
         case 200:
@@ -52,4 +52,3 @@ def handle_error(error_data: dict) -> None:
             )
             print_info_panel(message=message, title=title)
             raise typer.Exit(1)
-

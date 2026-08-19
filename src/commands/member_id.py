@@ -13,7 +13,6 @@ app = typer.Typer(name="memberid")
 
 
 class MemberID:
-
     @api_caller
     @staticmethod
     def get_next_member_id(member_id_prefix: str, **kwargs) -> str:
@@ -62,7 +61,7 @@ class MemberID:
 def get_next_member_id_command(
     member_id_prefix: str = typer.Argument(
         ..., help="The numerical prefix to filter and search gaps for (e.g. 2)"
-    )
+    ),
 ):
     """CLI routing function that Typer safely parses."""
     typer.echo(f"Fetching next available ID for prefix: {member_id_prefix}...")

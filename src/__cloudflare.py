@@ -16,6 +16,7 @@ ZONE_ID = str(setting.CLOUDFLARE_ZONE_ID)
 client = AsyncCloudflare(api_token=TOKEN)
 logger = logging.getLogger("cloudflare")
 
+
 async def get_subdomain_record():
     """Finds an existing DNS record for a subdomain."""
     try:
@@ -74,6 +75,7 @@ async def enable_subdomain(proxied: bool = False):
         logger.info("Waiting for ")
         time.sleep(600)
 
+
 async def disable_subdomain():
     """Disables a subdomain by deleting its DNS record."""
     subdomain_name = str(setting.CLOUDFLARE_SUBDOMAIN)
@@ -122,10 +124,12 @@ def upload_template_to_server(file_to_upload: str):
         typer.Exit(1)
 
 
-def wait_until_accessible(url: str, interval: int = 5, timeout: int = 5, max_attempts: int | None = None) -> bool:
+def wait_until_accessible(
+    url: str, interval: int = 5, timeout: int = 5, max_attempts: int | None = None
+) -> bool:
     """
     Pings a URL every `interval` seconds until it returns an HTTP 2xx status code.
-    
+
     :param url: The target HTTP/HTTPS URL to ping.
     :param interval: Seconds to wait between retries (default: 5s).
     :param timeout: Connection timeout per request (default: 5s).
@@ -147,14 +151,17 @@ def wait_until_accessible(url: str, interval: int = 5, timeout: int = 5, max_att
                 print(f"✅ {url} is live! (Status Code: {response.status_code})")
                 return True
             else:
-                print(f"⏳ [{attempts}] Returned HTTP {response.status_code}. Retrying in {interval}s...")
+                print(
+                    f"⏳ [{attempts}] Returned HTTP {response.status_code}. Retrying in {interval}s..."
+                )
 
         except requests.RequestException as e:
-            print(f"⏳ [{attempts}] Host unreachable ({type(e).__name__}). Retrying in {interval}s...")
+            print(
+                f"⏳ [{attempts}] Host unreachable ({type(e).__name__}). Retrying in {interval}s..."
+            )
 
         if max_attempts and attempts >= max_attempts:
             print(f"❌ Reached max attempts ({max_attempts}). Stopping ping.")
             return False
 
         time.sleep(interval)
-

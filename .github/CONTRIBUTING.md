@@ -8,48 +8,48 @@ Thank you for contributing to the CISON Command Line Interface. Follow this guid
    ```bash
    curl -LsSf [https://astral.sh/uv/install.sh](https://astral.sh/uv/install.sh) | sh
 
-```
+   ```
 
 2. **Clone and setup virtual environment**:
-```bash
-git clone git@github.com:CISON-Official/cli.git
-cd cli
-uv sync
+   ```bash
+   git clone git@github.com:CISON-Official/cli.git
+   cd cli
+   uv sync
 
-```
+   ```
 
 
 3. **Install editable local build**:
-```bash
-uv tool install --editable .
+   ```bash
+   uv tool install --editable .
 
-```
+   ```
 
 
 
 ## Development Workflow
 
 1. Create a feature branch:
-```bash
-git checkout -b feature/your-feature-name
+   ```bash
+   git checkout -b feature/your-feature-name
 
-```
+   ```
 
 
 2. Verify code quality using `ruff`:
-```bash
-uv run ruff check .
-uv run ruff format .
+   ```bash
+   uv run ruff check .
+   uv run ruff format .
 
-```
+   ```
 
 
 3. Test configuration and local command execution:
-```bash
-cison configure
-cison config show
+   ```bash
+   cison configure
+   cison config show
 
-```
+   ```
 
 
 4. Commit changes using structured messages:

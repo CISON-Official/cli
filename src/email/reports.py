@@ -11,12 +11,12 @@ from src.config import setting
 from src.email.base import EmailBase
 
 
-
-
 class Reports(EmailBase):
     """Fetch engagement reports and statistics for sent campaigns."""
 
-    def opens(self, campaign_key: str, *, from_index: int = 1, range_count: int = 25) -> list[dict[str, Any]]:
+    def opens(
+        self, campaign_key: str, *, from_index: int = 1, range_count: int = 25
+    ) -> list[dict[str, Any]]:
         """Fetch the list of recipients who opened a campaign.
 
         Args:
@@ -34,12 +34,18 @@ class Reports(EmailBase):
             >>> Reports().opens("9a8b7c6d")  # doctest: +SKIP
             [{'email': 'jane@example.com', 'opened_time': '...'}, ...]
         """
-        
-        params = {"campaignkey": campaign_key, "fromindex": from_index, "range": range_count}
+
+        params = {
+            "campaignkey": campaign_key,
+            "fromindex": from_index,
+            "range": range_count,
+        }
         response = requests.get("getopendetail", params=params)
         response.get("list_of_details")
 
-    def clicks(self, campaign_key: str, *, from_index: int = 1, range_count: int = 25) -> list[dict[str, Any]]:
+    def clicks(
+        self, campaign_key: str, *, from_index: int = 1, range_count: int = 25
+    ) -> list[dict[str, Any]]:
         """Fetch the list of recipients who clicked a link in a campaign.
 
         Args:
@@ -58,7 +64,11 @@ class Reports(EmailBase):
             [{'email': 'jane@example.com', 'clicked_link': 'https://...'}, ...]
         """
         campaign_key = require_non_empty(campaign_key, field_name="campaign_key")
-        params = {"campaignkey": campaign_key, "fromindex": from_index, "range": range_count}
+        params = {
+            "campaignkey": campaign_key,
+            "fromindex": from_index,
+            "range": range_count,
+        }
         response = self.get("getclickdetail", params=params)
         return list(response.get("list_of_details", []))
 
@@ -119,7 +129,11 @@ class Reports(EmailBase):
             [{'email': 'jane@example.com', 'unsub_time': '...'}, ...]
         """
         campaign_key = require_non_empty(campaign_key, field_name="campaign_key")
-        params = {"campaignkey": campaign_key, "fromindex": from_index, "range": range_count}
+        params = {
+            "campaignkey": campaign_key,
+            "fromindex": from_index,
+            "range": range_count,
+        }
         response = self.get("getunsubscribedetail", params=params)
         return list(response.get("list_of_details", []))
 
@@ -144,7 +158,11 @@ class Reports(EmailBase):
             [{'email': 'jane@example.com', 'complaint_time': '...'}, ...]
         """
         campaign_key = require_non_empty(campaign_key, field_name="campaign_key")
-        params = {"campaignkey": campaign_key, "fromindex": from_index, "range": range_count}
+        params = {
+            "campaignkey": campaign_key,
+            "fromindex": from_index,
+            "range": range_count,
+        }
         response = self.get("getspamdetail", params=params)
         return list(response.get("list_of_details", []))
 
@@ -166,5 +184,7 @@ class Reports(EmailBase):
             {'sent': 1000, 'opens': 320, 'clicks': 88, 'bounces': 12}
         """
         campaign_key = require_non_empty(campaign_key, field_name="campaign_key")
-        response = self.get("getcampaignreportsummary", params={"campaignkey": campaign_key})
+        response = self.get(
+            "getcampaignreportsummary", params={"campaignkey": campaign_key}
+        )
         return dict(response.get("summary", response))

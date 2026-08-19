@@ -270,7 +270,6 @@ def convert_to_vcf(
     try:
         #
         with open(output_file_path, "w", encoding="utf-8") as f:
-
             for row in data.itertuples(index=False):
                 first = getattr(row, "first_name", "") or ""
                 last = getattr(row, "last_name", "") or ""
@@ -306,16 +305,13 @@ def suppress_output():
     """Context manager to prevent any output to the terminal."""
 
     with open(os.devnull, "w") as devnull:
-
         old_stdout = sys.stdout
         old_stderr = sys.stderr
         try:
-
             sys.stdout = devnull
             sys.stderr = devnull
             yield
         finally:
-
             sys.stdout = old_stdout
             sys.stderr = old_stderr
 

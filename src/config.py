@@ -12,6 +12,7 @@ def get_config():
     if ENV_PATH.exists():
         return Config(RepositoryEnv(ENV_PATH))
     from decouple import config
+
     return config
 
 
