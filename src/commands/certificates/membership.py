@@ -18,10 +18,12 @@ from rich.table import Table
 from rich.progress import track
 from rich.console import Console
 
+from src.config import setting
+from src.utils import get_headers
 from src.commands.user import User
-from src.decorators import api_caller, silence_stdout
-from src.config import get_headers, print_error, setting
+from src.gui.print import print_error_panel
 from src.utils import create_disk_cached_function
+from src.decorators import api_caller, silence_stdout
 
 app = typer.Typer(name="membership")
 console = Console()
@@ -231,7 +233,7 @@ def create_certificates(
 ):
 
     if not user_id and not member_id:
-        print_error("Error: You must provide either --user-id or --member-id.")
+        print_error_panel("Error: You must provide either --user-id or --member-id.")
         raise typer.BadParameter("Missing identifier.")
     print(f"Processing with user_id={user_id} and member_id={member_id}")
     Membership.create_certificates(member_id=member_id, user_id=None)

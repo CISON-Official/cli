@@ -1,0 +1,20 @@
+name: Code Quality & Formatting
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: "latest"
+      - name: Run Ruff Linter
+        run: uv run ruff check .
+      - name: Check Formatting
+        run: uv run ruff format --check .

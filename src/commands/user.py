@@ -9,16 +9,18 @@ from rich import print
 from requests import Session
 from requests.exceptions import HTTPError
 
-from src.gui.print import print_error_panel
+from src.utils import get_headers
 from src.decorators import api_caller
-from src.config import get_headers, print_error
+from src.gui.print import print_error_panel
 from src.gui.tables import display_user_details
 from src.utils import (
     clean_nigerian_states,
     create_disk_cached_function,
     export_member_data_by_state,
     convert_to_vcf,
+    save_dataframe,
 )
+from src.types import OutputFormat
 
 app = typer.Typer(name="user")
 
@@ -49,7 +51,7 @@ class User:
                 )
                 return response.json().get("user_id")
         except HTTPError:
-            print_error("Member ID Could not be found")
+            print_error_panel("Member ID Could not be found")
             return None
 
     @api_caller
@@ -73,21 +75,21 @@ class User:
                     if response.json()["data"]["user_id"].strip() != "":
                         return response.json()["data"]
                     else:
-                        print_error("User ID is not found in dataset")
+                        print_error_panel("User ID is not found in dataset")
                         return None
                 else:
-                    print_error("Dataset returned is empty")
+                    print_error_panel("Dataset returned is empty")
                     return None
             else:
-                print_error("Dataset is an invalid response")
+                print_error_panel("Dataset is an invalid response")
                 return None
         except HTTPError:
-            print_error("Member ID Could not be found")
+            print_error_panel("Member ID Could not be found")
             return None
 
     @api_caller
     @staticmethod
-    def get_all_users(**kwargs) -> dict:
+    def get_all_users(**kwargs) -> dict: # type: ignore
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
         root_url: str = kwargs["root_url"]
@@ -161,6 +163,25 @@ class User:
 
             response.raise_for_status()
 
+            return response.json()
+        except HTTPError as e:
+            print(e)
+            print_error_panel("Http Error Experienced Here")
+            return None
+
+    @api_caller
+    @staticmethod
+    def all_users_with_complete_payment(*args, **kwargs) -> Optional[dict]:
+        session: Session = kwargs["session"]
+        token: str = kwargs["token"]
+        root_url: str = kwargs["root_url"]
+
+        try:
+            response = session.get(
+                f"{root_url.rstrip('/')}/data/users/complete-payment-latest",
+                headers=get_headers(token),
+            )
+            response.raise_for_status()
             return response.json()
         except HTTPError as e:
             print(e)
@@ -300,11 +321,11 @@ def complete_payment_with_certificates():
     from src.commands.certificates.membership import Membership
 
     get_cached_certificates = create_disk_cached_function(
-        Membership.get_all_certificates, cache_directory=".cache/certificates"
+        Membership.get_all_certificates, cache_directory="certificates"
     )
 
     get_cached_user_info = create_disk_cached_function(
-        User.all_info_about_users, cache_directory=".user_data_cache"
+        User.all_info_about_users, cache_directory="all_users"
     )
     response = get_cached_user_info()
 
@@ -323,3 +344,89 @@ def complete_payment_with_certificates():
     df = pd.DataFrame(complete)
     df = df[["first_name", "last_name", "middle_name", "member_id", "phone_no"]]
     df.to_csv("complete.csv")
+
+
+@app.command("partial-payments")
+def get_partial_payments(
+    ctx: typer.Context,
+    filename: Optional[str] = typer.Option(
+        None,
+        "--filename",
+        "-f",
+        help="Output filename (defaults to command name: partial-payments)",
+    ),
+    fmt: OutputFormat = typer.Option(
+        OutputFormat.csv,
+        "--format",
+        "-fmt",
+        help="Format to save output to",
+    ),
+):
+    """Fetch all users with partial payments and save to disk."""
+    data = User.all_users_with_partial_payment(**ctx.obj)
+    if data is None:
+        raise typer.Exit(code=1)
+
+    save_dataframe(
+        data=data,
+        filename=filename,
+        default_name="partial-payments",
+        output_format=fmt,
+    )
+
+
+@app.command("no-payments")
+def get_no_payments(
+    ctx: typer.Context,
+    filename: Optional[str] = typer.Option(
+        None,
+        "--filename",
+        "-f",
+        help="Output filename (defaults to command name: no-payments)",
+    ),
+    fmt: OutputFormat = typer.Option(
+        OutputFormat.csv,
+        "--format",
+        "-fmt",
+        help="Format to save output to",
+    ),
+):
+    """Fetch all users without any payments and save to disk."""
+    data = User.all_users_without_payment(**ctx.obj)
+    if data is None:
+        raise typer.Exit(code=1)
+
+    save_dataframe(
+        data=data,
+        filename=filename,
+        default_name="no-payments",
+        output_format=fmt,
+    )
+
+@app.command("complete-payments")
+def get_complete_payments(
+    ctx: typer.Context,
+    filename: Optional[str] = typer.Option(
+        None,
+        "--filename",
+        "-f",
+        help="Output filename (defaults to command name: complete-payments)",
+    ),
+    fmt: OutputFormat = typer.Option(
+        OutputFormat.csv,
+        "--format",
+        "-fmt",
+        help="Format to save output to",
+    ),
+):
+    """Fetch all users with complete payments and save to disk."""
+    data = User.all_users_with_complete_payment(**ctx.obj)
+    if data is None:
+        raise typer.Exit(code=1)
+
+    save_dataframe(
+        data=data,
+        filename=filename,
+        default_name="complete-payments",
+        output_format=fmt,
+    )

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+from enum import Enum
 from typing import Optional
 from dataclasses import dataclass
 
@@ -73,3 +73,10 @@ class Paid:
             new_member_fee=self.new_member_fee,
             transition_fee=self.transition_fee,
         )
+
+
+class OutputFormat(str, Enum):
+    csv = "csv"
+    json = "json"
+    xlsx = "xlsx"
+    parquet = "parquet"

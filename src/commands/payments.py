@@ -3,7 +3,7 @@ import typer
 import pandas as pd
 from requests import Session
 
-from src.config import get_headers
+from src.utils import get_headers
 from src.decorators import api_caller
 
 

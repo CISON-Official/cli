@@ -1,0 +1,6 @@
+# Default owners for all files in the repository
+*       @CISON-Official/developers
+
+# Specific owners for CI/CD and security updates
+.github/           @CISON-Official/devops
+pyproject.toml     @CISON-Official/devops

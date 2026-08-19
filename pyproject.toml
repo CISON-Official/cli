@@ -1,5 +1,9 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
-name = "cli"
+name = "cison-cli"
 version = "1.1.0"
 description = "CISON CLI Program"
 readme = "README.md"
@@ -18,4 +22,14 @@ dependencies = [
     "rich>=15.0.0",
     "tqdm>=4.68.4",
     "typer>=0.26.7",
+]
+
+[project.scripts]
+cison = "main:app"
+
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+include = [
+    "main.py",
 ]
