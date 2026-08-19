@@ -21,10 +21,12 @@ from rich.console import Console
 from src.commands.user import User
 from src.decorators import api_caller, silence_stdout
 from src.config import get_headers, print_error, setting
+from src.utils import create_disk_cached_function
 
 app = typer.Typer(name="membership")
 console = Console()
 logger = logging.getLogger(__name__)
+
 
 class Membership:
 
@@ -189,6 +191,23 @@ class Membership:
             console.print(f"[green]✔[/green] Found candidate: {user.get("first_name")}")
         return data
 
+    @api_caller
+    @staticmethod
+    def get_all_certificates(**kwargs) -> dict:
+        try:
+            session: Session = kwargs["session"]
+            token: str = kwargs["token"]
+            root_url: str = kwargs["root_url"]
+
+            response = session.get(
+                f"{root_url.rstrip('/')}/certificate",
+                headers=get_headers(token),
+            )
+            response.raise_for_status()
+            return response.json()
+        except Exception:
+            return {}
+
 
 @app.command(
     name="have-certificate",
@@ -277,3 +296,13 @@ def create_bulk_certificates(
     console.print(
         "\n[bold green]✔ All certificates have been generated successfully![/bold green]"
     )
+
+
+@app.command(name="all", help="Get all the certificates")
+def get_all_certificate():
+    get_cached_certificates = create_disk_cached_function(
+        Membership.get_all_certificates, cache_directory=".cache/certificates"
+    )
+
+    certificates = get_cached_certificates()
+    print(certificates)
