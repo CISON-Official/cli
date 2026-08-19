@@ -121,14 +121,10 @@ class EmailCampaign(EmailBase):
         content_url: str,
     ) -> Optional[str]:
         try:
-            # Create the dictionary
+            
             list_details_dict = {list_key: [] for list_key in list_details}
             
-            # CRITICAL FIX: 
-            # Option A: Try passing the dict directly (requests often handles this correctly for Zoho)
-            # If Option A fails, revert to json.dumps but ensure no extra escaping happens.
-            # Most reliable for Zoho v1.1 is often passing the string exactly as formed.
-            list_details_json_string = json.dumps(list_details_dict, separators=(',', ':')) # Compact JSON
+            list_details_json_string = json.dumps(list_details_dict, separators=(',', ':')) 
 
             self.params["campaignname"] = campaign_name
             self.params["subject"] = subject
@@ -137,13 +133,7 @@ class EmailCampaign(EmailBase):
             self.params["from_name"] = str(setting.PROGRAM_NAME)
             self.params["topicId"] = "1448394000000047017"
             
-            # Assign the JSON string
             self.params["list_details"] = list_details_json_string
-
-            # DEBUG: Print the exact URL being generated to verify escaping
-            # req = requests.Request('POST', f"{setting.EMAIL_API_BASE}/createCampaign", params=self.params, headers=self.get_header())
-            # prepared = req.prepare()
-            # print(f"DEBUG URL: {prepared.url}") 
 
             response = requests.post(
                 f"{setting.EMAIL_API_BASE}/createCampaign",
@@ -154,12 +144,11 @@ class EmailCampaign(EmailBase):
             response.raise_for_status()
             data = response.json()
             
-            # Check specifically for success code
+            
             if data.get("code") == "200":
                 print_success_panel(f"Successfully created campaign with ID: {data.get('campaignKey')}")
                 return data.get("campaignKey")
             else:
-                # If creation returns an error code (even if HTTP 200), handle it
                 print_error_panel(f"API Error during creation: {data}")
                 return None
 

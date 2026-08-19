@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from copy import deepcopy
 from typing import Optional, Literal
 
 import typer
@@ -305,12 +306,16 @@ class MailingList(EmailBase):
         lastname: Optional[str] = None,
         source: Optional[str] = None,
         topic_id: Optional[str] = None,
+        payload:Optional[dict] = None,
     ) -> bool:
         self.params["listkey"] = listkey
         self.params["resfmt"] = "JSON"
-        self.params["contactinfo"] = _build_contactinfo(
-            contact_email, firstname, lastname
-        )
+        if payload:
+            self.params["contactinfo"] = payload
+        else:
+            self.params["contactinfo"] = _build_contactinfo(
+                contact_email, firstname, lastname
+            )
         if source:
             self.params["source"] = source
         if topic_id:
@@ -415,12 +420,14 @@ class MailingList(EmailBase):
             response.raise_for_status()
 
             data = response.json()
+            print(data)
             if data.get("status") == "success":
                 print_success_panel(
                     f"Successfully added contacts to list: {data.get('listname')}"
                 )
                 return True
             print_error_panel(f"Unable to add contacts to list {listkey}")
+            print(data)
             return False
         except requests.exceptions.HTTPError as e:
             print_error_panel(f"Error while adding contacts to list {e}")
@@ -437,18 +444,20 @@ class MailingList(EmailBase):
         listdescription: Optional[str] = None,
     ) -> Optional[str]:
 
-        self.params["emailids"] = ",".join(emailids)
-        self.params["listname"] = listname
-        self.params["signupform"] = signupform
-        self.params["mode"] = "newlist"
-        self.params["resfmt"] = "JSON"
+        params = deepcopy(self.params)
+
+        params["emailids"] = ",".join(emailids)
+        params["listname"] = listname
+        params["signupform"] = signupform
+        params["mode"] = "newlist"
+        params["resfmt"] = "JSON"
         if listdescription:
-            self.params["listdescription"] = listdescription
+            params["listdescription"] = listdescription
 
         try:
             response = requests.post(
                 f"{setting.EMAIL_API_BASE}/addlistandcontacts",
-                params=self.params,
+                params=params,
                 headers=self.get_header(),
             )
             response.raise_for_status()
@@ -460,6 +469,7 @@ class MailingList(EmailBase):
                     f"({data.get('listkey')})"
                 )
                 return data.get("listkey")
+            print(data)
             print_error_panel("Unable to create mailing list")
             return None
         except requests.exceptions.HTTPError as e:
