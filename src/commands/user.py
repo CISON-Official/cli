@@ -11,6 +11,7 @@ from requests.exceptions import HTTPError
 
 from src.utils import get_headers
 from src.decorators import api_caller
+from src.commands.payments import Payments
 from src.gui.print import print_error_panel
 from src.gui.tables import display_user_details
 from src.utils import (
@@ -89,7 +90,7 @@ class User:
 
     @api_caller
     @staticmethod
-    def get_all_users(**kwargs) -> dict: # type: ignore
+    def get_all_users(**kwargs) -> dict:  # type: ignore
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
         root_url: str = kwargs["root_url"]
@@ -148,6 +149,7 @@ class User:
             print_error_panel("Http Error Experienced Here")
             return None
             # typer.Exit()
+
     @api_caller
     @staticmethod
     def all_users_without_payment(*args, **kwargs) -> Optional[dict]:
@@ -187,7 +189,6 @@ class User:
             print(e)
             print_error_panel("Http Error Experienced Here")
             return None
-    
 
     @staticmethod
     def rename_columns(dp: pd.DataFrame) -> pd.DataFrame:
@@ -363,12 +364,15 @@ def get_partial_payments(
     ),
 ):
     """Fetch all users with partial payments and save to disk."""
-    data = User.all_users_with_partial_payment()
+    function = create_disk_cached_function(
+        Payments.get_users_with_partial_payments, "partial_payment"
+    )
+    data = function()
     if data is None:
         raise typer.Exit(code=1)
 
     save_dataframe(
-        data=data['data'],
+        data=data,
         filename=filename,
         default_name="partial-payments",
         output_format=fmt,
@@ -392,16 +396,20 @@ def get_no_payments(
     ),
 ):
     """Fetch all users without any payments and save to disk."""
-    data = User.all_users_without_payment()
+    function = create_disk_cached_function(
+        Payments.get_users_without_payments, "without_payment"
+    )
+    data = function()
     if data is None:
         raise typer.Exit(code=1)
 
     save_dataframe(
-        data=data['data'],
+        data=data,
         filename=filename,
         default_name="no-payments",
         output_format=fmt,
     )
+
 
 @app.command("complete-payments")
 def get_complete_payments(
@@ -420,12 +428,17 @@ def get_complete_payments(
     ),
 ):
     """Fetch all users with complete payments and save to disk."""
-    data = User.all_users_with_complete_payment()
+    function = create_disk_cached_function(
+        Payments.get_users_with_complete_payments, "complete_payment"
+    )
+
+    data = function()
+    
     if data is None:
         raise typer.Exit(code=1)
 
     save_dataframe(
-        data=data['data'],
+        data=data,
         filename=filename,
         default_name="complete-payments",
         output_format=fmt,
