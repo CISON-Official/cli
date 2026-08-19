@@ -10,7 +10,7 @@ from src.commands.user import app as user_app
 from src.commands.member_id import app as memberid_app
 from src.commands.certificates import app as certificate_app
 
-LoggingManager.setup_logging(base_dir="logs", log_level=logging.DEBUG)
+LoggingManager.setup_logging(base_dir="logs", log_level=logging.INFO)
 
 app = typer.Typer(
     name="CISON CLI",
