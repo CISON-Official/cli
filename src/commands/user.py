@@ -363,7 +363,7 @@ def get_partial_payments(
     ),
 ):
     """Fetch all users with partial payments and save to disk."""
-    data = User.all_users_with_partial_payment(**ctx.obj)
+    data = User.all_users_with_partial_payment()
     if data is None:
         raise typer.Exit(code=1)
 
@@ -392,7 +392,7 @@ def get_no_payments(
     ),
 ):
     """Fetch all users without any payments and save to disk."""
-    data = User.all_users_without_payment(**ctx.obj)
+    data = User.all_users_without_payment()
     if data is None:
         raise typer.Exit(code=1)
 
@@ -420,7 +420,7 @@ def get_complete_payments(
     ),
 ):
     """Fetch all users with complete payments and save to disk."""
-    data = User.all_users_with_complete_payment(**ctx.obj)
+    data = User.all_users_with_complete_payment()
     if data is None:
         raise typer.Exit(code=1)
 
