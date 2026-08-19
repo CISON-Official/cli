@@ -17,6 +17,7 @@ from src.utils import (
     clean_nigerian_states,
     create_disk_cached_function,
     export_member_data_by_state,
+    convert_to_vcf,
 )
 
 app = typer.Typer(name="user")
@@ -124,6 +125,49 @@ class User:
             return None
             # typer.Exit()
 
+    @api_caller
+    @staticmethod
+    def all_users_with_partial_payment(*args, **kwargs) -> Optional[dict]:
+        session: Session = kwargs["session"]
+        token: str = kwargs["token"]
+        root_url: str = kwargs["root_url"]
+
+        try:
+            response = session.get(
+                f"{root_url.rstrip('/')}/data/users/partial-payment-latest",
+                headers=get_headers(token),
+            )
+
+            response.raise_for_status()
+
+            return response.json()
+        except HTTPError as e:
+            print(e)
+            print_error_panel("Http Error Experienced Here")
+            return None
+            # typer.Exit()
+    @api_caller
+    @staticmethod
+    def all_users_without_payment(*args, **kwargs) -> Optional[dict]:
+        session: Session = kwargs["session"]
+        token: str = kwargs["token"]
+        root_url: str = kwargs["root_url"]
+
+        try:
+            response = session.get(
+                f"{root_url.rstrip('/')}/data/users/no-payment-latest",
+                headers=get_headers(token),
+            )
+
+            response.raise_for_status()
+
+            return response.json()
+        except HTTPError as e:
+            print(e)
+            print_error_panel("Http Error Experienced Here")
+            return None
+    
+
     @staticmethod
     def rename_columns(dp: pd.DataFrame) -> pd.DataFrame:
         return dp.rename(
@@ -180,6 +224,7 @@ def get_user_information_from_member_id(
     if response1:
         response2 = User.get_user_information(response1)
         if response2:
+            print(response2)
             display_user_details(response2)
 
 
@@ -208,12 +253,11 @@ def search(
     )
     user = get_cached_user_info()
 
-    data = pd.DataFrame(user['data'])
+    data = pd.DataFrame(user["data"])
 
     if data.empty:
         print("User database is empty.")
         raise typer.Exit()
-
 
     matching_mask = data.astype(str).apply(
         lambda col: col.str.contains(value, case=False, na=False)
@@ -231,8 +275,18 @@ def search(
         print(matching_rows.head())
         matching_rows = User.rename_columns(matching_rows)
         matching_rows = matching_rows[
-            ["first_name", "last_name", "middle_name", "member_id", "marital_status"]
+            [
+                "first_name",
+                "last_name",
+                "middle_name",
+                "member_id",
+                "marital_status",
+                "phone_no",
+                "company",
+                "title",
+            ]
         ]
+        convert_to_vcf(matching_rows, value, suffix=f"CISON {value}")
         matching_rows.to_csv(file_name, index=False)
         print(f"\nResults exported to {file_name}")
     else:
@@ -249,12 +303,23 @@ def complete_payment_with_certificates():
         Membership.get_all_certificates, cache_directory=".cache/certificates"
     )
 
+    get_cached_user_info = create_disk_cached_function(
+        User.all_info_about_users, cache_directory=".user_data_cache"
+    )
+    response = get_cached_user_info()
+
+    data = pd.DataFrame(response["data"])
+    data = User.rename_columns(data)
+
     complete = []
     certs = get_cached_certificates()
     for i in tqdm.tqdm(certs["data"]):
         user_info = User.get_user_information(i["user_id"])
         if all(user_info["paid_fees"].values()):
-            complete.append(i)
+            user_data = data[data.member_id == user_info["member_id"]]
+            user_data = user_data.to_dict(orient="records")[0]
+            complete.append(user_data)
 
     df = pd.DataFrame(complete)
+    df = df[["first_name", "last_name", "middle_name", "member_id", "phone_no"]]
     df.to_csv("complete.csv")
