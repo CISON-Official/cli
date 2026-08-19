@@ -118,7 +118,7 @@ def configure(
     )
 
 
-@app.command("self-update")
+@app.command("update")
 def self_update():
     """Update CISON CLI to latest version via uv."""
     typer.secho("Updating CISON CLI...", fg=typer.colors.CYAN)
