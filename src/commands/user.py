@@ -368,7 +368,7 @@ def get_partial_payments(
         raise typer.Exit(code=1)
 
     save_dataframe(
-        data=data,
+        data=data['data'],
         filename=filename,
         default_name="partial-payments",
         output_format=fmt,
@@ -397,7 +397,7 @@ def get_no_payments(
         raise typer.Exit(code=1)
 
     save_dataframe(
-        data=data,
+        data=data['data'],
         filename=filename,
         default_name="no-payments",
         output_format=fmt,
@@ -425,7 +425,7 @@ def get_complete_payments(
         raise typer.Exit(code=1)
 
     save_dataframe(
-        data=data,
+        data=data['data'],
         filename=filename,
         default_name="complete-payments",
         output_format=fmt,
