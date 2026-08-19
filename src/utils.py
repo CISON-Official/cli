@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import os
+import sys
 import time
 import shutil
+import contextlib
 from pdb import set_trace
 from itertools import permutations
 from typing import Any, Callable
@@ -217,10 +219,10 @@ def export_member_data_by_state(df: pd.DataFrame, state_column_name: str, dir="d
 
 
 def create_disk_cached_function(
-    api_func: Callable[..., Any], cache_directory: str = ".cli_cache"
+    api_func: Callable[..., Any], cache_directory: str = "cison_dir"
 ) -> Callable[..., Any]:
     """Wraps any function with a persistent disk-backed cache."""
-    cache = Cache(cache_directory)
+    cache = Cache(f".cache/{cache_directory}")
     return cache.memoize(expire=5_000_000)(api_func)
 
 
@@ -234,30 +236,36 @@ def zip_directory(folder_to_zip: str, output_zip_filename: str):
     shutil.make_archive(output_zip_filename, "zip", folder_to_zip)
     print(f"Successfully created: {output_zip_filename}.zip")
 
-def convert_to_vcf(data: pd.DataFrame, root_dir: str, filename: str = "all_contacts.vcf", suffix="CISON") -> bool:
+
+def convert_to_vcf(
+    data: pd.DataFrame,
+    root_dir: str,
+    filename: str = "all_contacts.vcf",
+    suffix="CISON",
+) -> bool:
     """
-    Combines an entire DataFrame of users into ONE single .vcf file 
+    Combines an entire DataFrame of users into ONE single .vcf file
     that imports all contacts simultaneously when opened on a phone.
     """
     main_dir = os.path.join("data", "vcf", root_dir)
 
     os.makedirs(main_dir, exist_ok=True)
-    
+
     output_file_path = os.path.join(main_dir, filename)
-    
+
     try:
         #
         with open(output_file_path, "w", encoding="utf-8") as f:
-            
+
             for row in data.itertuples(index=False):
-                first = getattr(row, 'first_name', '') or ''
-                last = getattr(row, 'last_name', '') or ''
-                middle = getattr(row, 'middle_name', '') or ''
-                company = getattr(row, 'company', '') or ''
-                phone = getattr(row, 'phone_no', '') or ''
-                title = getattr(row, 'title', '') or ''
+                first = getattr(row, "first_name", "") or ""
+                last = getattr(row, "last_name", "") or ""
+                middle = getattr(row, "middle_name", "") or ""
+                company = getattr(row, "company", "") or ""
+                phone = getattr(row, "phone_no", "") or ""
+                title = getattr(row, "title", "") or ""
                 suffix = suffix if suffix else ""
-                
+
                 vcard_lines = [
                     "BEGIN:VCARD",
                     "VERSION:3.0",
@@ -266,14 +274,33 @@ def convert_to_vcf(data: pd.DataFrame, root_dir: str, filename: str = "all_conta
                     f"ORG:{company}",
                     f"TITLE:{title}",
                     f"TEL;TYPE=CELL;TYPE=VOICE:{phone}",
-                    "END:VCARD"
+                    "END:VCARD",
                 ]
-                
+
                 f.write("\n".join(vcard_lines) + "\n\n")
-                
+
         print(f"Successfully created master VCF file at: {output_file_path}")
         return True
-        
+
     except Exception as e:
         print(f"Error while creating master vcard: {e}")
         return False
+
+
+@contextlib.contextmanager
+def suppress_output():
+    """Context manager to prevent any output to the terminal."""
+
+    with open(os.devnull, "w") as devnull:
+
+        old_stdout = sys.stdout
+        old_stderr = sys.stderr
+        try:
+
+            sys.stdout = devnull
+            sys.stderr = devnull
+            yield
+        finally:
+
+            sys.stdout = old_stdout
+            sys.stderr = old_stderr
