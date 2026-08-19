@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "cison-cli"
+name = "cison"
 version = "1.1.1"
 description = "CISON CLI Program"
 readme = "README.md"
