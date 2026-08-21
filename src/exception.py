@@ -1,9 +1,6 @@
-#!/usr/bin/env python3
-
-import sys
 import typer
 
-from src.gui.print import print_error_panel, print_warning_panel, print_info_panel
+from src.gui.print import print_error_panel, print_info_panel, print_warning_panel
 
 
 def handle_error(error_data: dict) -> None:

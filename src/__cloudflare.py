@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
-import time
 import logging
+import time
 
-import typer
 import requests
+import typer
 from cloudflare import AsyncCloudflare
 from cloudflare.types.dns.record_list_params import Name
 

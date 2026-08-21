@@ -1,9 +1,8 @@
-#!/usr/bin/env python3
 import os
 import sys
-from functools import wraps
-from typing import Callable
+from collections.abc import Callable
 from contextlib import contextmanager
+from functools import wraps
 
 from requests import Session
 
@@ -18,19 +17,19 @@ def api_caller(func: Callable) -> Callable:
             email = str(setting.ADMIN_EMAIL)
             response = session.post(
                 root_url + "auth/api-key",
-                json=dict(email=email),
+                json={"email": email},
             )
             if response.status_code >= 200 and response.status_code < 300:
-                data = dict(
-                    email=email,
-                    token=response.json()["data"]["token"],
-                    root_url=root_url,
-                    session=session,
-                )
+                data = {
+                    "email": email,
+                    "token": response.json()["data"]["token"],
+                    "root_url": root_url,
+                    "session": session,
+                }
                 kwargs.update(data)
                 return func(*args, **kwargs)
             else:
-                raise Exception("Unable to authenticate user {}".format(response.text))
+                raise Exception(f"Unable to authenticate user {response.text}")
 
     return wrapper
 

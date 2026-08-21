@@ -1,7 +1,7 @@
 import inspect
 from pathlib import Path
+
 from decouple import Config, RepositoryEnv, UndefinedValueError
-import typer
 
 CONFIG_DIR = Path.home() / ".cison"
 ENV_PATH = CONFIG_DIR / ".env"

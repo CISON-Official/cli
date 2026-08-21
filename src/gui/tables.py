@@ -1,15 +1,12 @@
-#!/usr/bin/env python3
-
 from datetime import datetime
 
-
 from rich import print
-from rich.text import Text
-from rich.table import Table
-from rich.panel import Panel
-from rich.console import Console
 from rich.columns import Columns
+from rich.console import Console
+from rich.panel import Panel
 from rich.prompt import get_console
+from rich.table import Table
+from rich.text import Text
 
 
 def display_user_details(data: dict[dict | list | str, str]) -> None:

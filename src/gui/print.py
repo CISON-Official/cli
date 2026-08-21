@@ -1,10 +1,7 @@
-#!/usr/bin/env python3
-
 from typing import Any
 
 from rich.json import JSON
 from rich.panel import Panel
-from rich.console import Console
 from rich.prompt import Confirm, get_console
 
 

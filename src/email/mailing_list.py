@@ -1,25 +1,23 @@
-#!/usr/bin/env python3
-
 from copy import deepcopy
-from typing import Optional, Literal
+from typing import Literal
 
-import typer
 import requests
+import typer
 from rich import print_json
 
+from src.__email import get_email_header
 from src.config import setting
 from src.email.base import EmailBase
-from src.__email import get_email_header
-from src.gui.tables import display_all_mailing_list
 from src.gui.print import confirm_action, print_error_panel, print_success_panel
+from src.gui.tables import display_all_mailing_list
 
 app: typer.Typer = typer.Typer(name="mailinglist")
 
 
 def _build_contactinfo(
     contact_email: str,
-    firstname: Optional[str] = None,
-    lastname: Optional[str] = None,
+    firstname: str | None = None,
+    lastname: str | None = None,
 ) -> str:
     """Build the {key:value,...} style contactinfo string Zoho expects."""
     fields = {"Contact Email": contact_email}
@@ -33,13 +31,13 @@ def _build_contactinfo(
 class MailingList(EmailBase):
     def get_mailing_list(
         self,
-        id: Optional[str] = None,
-        sort: Literal["asc"] | Literal["desc"] = "asc",
-        fromindex: Optional[int] = None,
-        range: Optional[int] = None,
-    ) -> Optional[str | dict]:
+        id: str | None = None,
+        sort: Literal["asc", "desc"] = "asc",
+        fromindex: int | None = None,
+        range: int | None = None,
+    ) -> str | dict | None:
 
-        params = dict(resfmt="JSON", sort=sort)
+        params = {"resfmt": "JSON", "sort": sort}
         if fromindex:
             params["fromindex"] = fromindex  # type: ignore
         if range:
@@ -72,13 +70,13 @@ class MailingList(EmailBase):
     def get_list_advanced_details(
         self,
         listkey: str,
-        filtertype: Optional[
-            Literal["sentcampaigns", "scheduledcampaigns", "recentcampaigns"]
-        ] = None,
-        fromindex: Optional[int] = None,
-        range: Optional[int] = None,
-    ) -> Optional[dict]:
-        params = dict(resfmt="JSON", listkey=listkey)
+        filtertype: (
+            Literal["sentcampaigns", "scheduledcampaigns", "recentcampaigns"] | None
+        ) = None,
+        fromindex: int | None = None,
+        range: int | None = None,
+    ) -> dict | None:
+        params = {"resfmt": "JSON", "listkey": listkey}
         if filtertype:
             params["filtertype"] = filtertype
         if fromindex:
@@ -108,13 +106,13 @@ class MailingList(EmailBase):
         self,
         listkey: str,
         sort: Literal["asc", "desc"] = "asc",
-        status: Optional[
-            Literal["active", "recent", "mostrecent", "unsub", "bounce"]
-        ] = None,
-        fromindex: Optional[int] = None,
-        range: Optional[int] = None,
-    ) -> Optional[dict]:
-        params = dict(resfmt="JSON", listkey=listkey, sort=sort)
+        status: (
+            Literal["active", "recent", "mostrecent", "unsub", "bounce"] | None
+        ) = None,
+        fromindex: int | None = None,
+        range: int | None = None,
+    ) -> dict | None:
+        params = {"resfmt": "JSON", "listkey": listkey, "sort": sort}
         if status:
             params["status"] = status
         if fromindex:
@@ -142,8 +140,8 @@ class MailingList(EmailBase):
 
     def get_all_contact_fields(
         self, type: Literal["xml", "json"] = "json"
-    ) -> Optional[dict]:
-        params = dict(type=type)
+    ) -> dict | None:
+        params = {"type": type}
 
         try:
             response = requests.get(
@@ -163,8 +161,8 @@ class MailingList(EmailBase):
             print_error_panel("Error while decoding to json")
             return None
 
-    def get_segment_details(self, listkey: str, cvid: str) -> Optional[dict]:
-        params = dict(resfmt="JSON", listkey=listkey, cvid=cvid)
+    def get_segment_details(self, listkey: str, cvid: str) -> dict | None:
+        params = {"resfmt": "JSON", "listkey": listkey, "cvid": cvid}
 
         try:
             response = requests.get(
@@ -184,8 +182,8 @@ class MailingList(EmailBase):
             print_error_panel("Error while decoding to json")
             return None
 
-    def get_segment_contacts(self, cvid: str) -> Optional[dict]:
-        params = dict(resfmt="JSON", cvid=cvid)
+    def get_segment_contacts(self, cvid: str) -> dict | None:
+        params = {"resfmt": "JSON", "cvid": cvid}
 
         try:
             response = requests.get(
@@ -211,12 +209,12 @@ class MailingList(EmailBase):
         newlistname: str,
         signupform: Literal["public", "private"],
     ) -> bool:
-        params = dict(
-            resfmt="JSON",
-            listkey=listkey,
-            newlistname=newlistname,
-            signupform=signupform,
-        )
+        params = {
+            "resfmt": "JSON",
+            "listkey": listkey,
+            "newlistname": newlistname,
+            "signupform": signupform,
+        }
 
         try:
             response = requests.post(
@@ -242,7 +240,7 @@ class MailingList(EmailBase):
     def delete_mailing_list(
         self, listkey: str, deletecontact: Literal["off", "on"] = "on"
     ) -> bool:
-        params = dict(resfmt="JSON", deletecontacts=deletecontact, listkey=listkey)
+        params = {"resfmt": "JSON", "deletecontacts": deletecontact, "listkey": listkey}
         try:
             response = requests.get(
                 f"{setting.EMAIL_API_BASE}/deletemailinglist",
@@ -270,9 +268,9 @@ class MailingList(EmailBase):
     def total_contacts(
         self,
         listkey: str,
-        status: Optional[Literal["active", "unsub", "bounce", "spam"]] = None,
-    ) -> Optional[int]:
-        params = dict(resfmt="JSON", listkey=listkey)
+        status: Literal["active", "unsub", "bounce", "spam"] | None = None,
+    ) -> int | None:
+        params = {"resfmt": "JSON", "listkey": listkey}
         if status:
             params["status"] = status
 
@@ -301,11 +299,11 @@ class MailingList(EmailBase):
         self,
         listkey: str,
         contact_email: str,
-        firstname: Optional[str] = None,
-        lastname: Optional[str] = None,
-        source: Optional[str] = None,
-        topic_id: Optional[str] = None,
-        payload: Optional[dict] = None,
+        firstname: str | None = None,
+        lastname: str | None = None,
+        source: str | None = None,
+        topic_id: str | None = None,
+        payload: dict | None = None,
     ) -> bool:
         self.params["listkey"] = listkey
         self.params["resfmt"] = "JSON"
@@ -345,9 +343,9 @@ class MailingList(EmailBase):
         self,
         listkey: str,
         contact_email: str,
-        firstname: Optional[str] = None,
-        lastname: Optional[str] = None,
-        topic_id: Optional[str] = None,
+        firstname: str | None = None,
+        lastname: str | None = None,
+        topic_id: str | None = None,
     ) -> bool:
         self.params["listkey"] = listkey
         self.params["resfmt"] = "JSON"
@@ -440,8 +438,8 @@ class MailingList(EmailBase):
         emailids: list[str],
         listname: str,
         signupform: Literal["public", "private"],
-        listdescription: Optional[str] = None,
-    ) -> Optional[str]:
+        listdescription: str | None = None,
+    ) -> str | None:
 
         params = deepcopy(self.params)
 
@@ -498,7 +496,7 @@ class MailingList(EmailBase):
             "Decimal",
             "Percent",
         ],
-        fieldlength: Optional[int] = None,
+        fieldlength: int | None = None,
         type: Literal["xml", "json"] = "json",
     ) -> bool:
         self.params["type"] = type
@@ -542,7 +540,7 @@ def get_mailing_list(
     range: int = typer.Option(100, "--range"),
 ):
 
-    kwargs = dict()
+    kwargs = {}
     # loader = ctx.obj
     if listkey:
         kwargs["id"] = listkey
@@ -570,7 +568,7 @@ def get_mailing_list(
 )
 def get_list_advanced_details(
     listkey: str = typer.Argument(..., help="Mailing List listkey"),
-    filtertype: Optional[str] = typer.Option(
+    filtertype: str | None = typer.Option(
         None,
         "--filtertype",
         help="sentcampaigns/scheduledcampaigns/recentcampaigns",
@@ -591,7 +589,7 @@ def get_list_advanced_details(
 def get_list_contacts(
     listkey: str = typer.Argument(..., help="Mailing List listkey"),
     sort: Literal["asc", "desc"] = typer.Option("asc", "--sort"),
-    status: Optional[str] = typer.Option(
+    status: str | None = typer.Option(
         None, "--status", help="active/recent/mostrecent/unsub/bounce"
     ),
     fromindex: int = typer.Option(1, "--fromindex"),
@@ -654,7 +652,7 @@ def delete_mailing_list(
 ):
     # loader = ctx.obj
     # loader.update(f"Deleting mailinglist with id: {listkey}")
-    kwargs = dict(listkey=listkey)
+    kwargs = {"listkey": listkey}
     kwargs["deletecontact"] = (
         "on" if confirm_action("Do you want to also delete the contacts? ") else "off"
     )
@@ -665,7 +663,7 @@ def delete_mailing_list(
 @app.command(name="total-contacts", help="get the total number of contacts in a list")
 def total_contacts(
     listkey: str = typer.Argument(..., help="Mailing List listkey"),
-    status: Optional[str] = typer.Option(
+    status: str | None = typer.Option(
         None, "--status", help="active/unsub/bounce/spam"
     ),
 ):
@@ -677,10 +675,10 @@ def total_contacts(
 def subscribe(
     listkey: str = typer.Argument(..., help="Mailing List listkey"),
     contact_email: str = typer.Option(..., "--email", "-e"),
-    firstname: Optional[str] = typer.Option(None, "--firstname"),
-    lastname: Optional[str] = typer.Option(None, "--lastname"),
-    source: Optional[str] = typer.Option(None, "--source"),
-    topic_id: Optional[str] = typer.Option(None, "--topic-id"),
+    firstname: str | None = typer.Option(None, "--firstname"),
+    lastname: str | None = typer.Option(None, "--lastname"),
+    source: str | None = typer.Option(None, "--source"),
+    topic_id: str | None = typer.Option(None, "--topic-id"),
 ):
     mailing_list = MailingList()
     mailing_list.subscribe(
@@ -697,9 +695,9 @@ def subscribe(
 def unsubscribe(
     listkey: str = typer.Argument(..., help="Mailing List listkey"),
     contact_email: str = typer.Option(..., "--email", "-e"),
-    firstname: Optional[str] = typer.Option(None, "--firstname"),
-    lastname: Optional[str] = typer.Option(None, "--lastname"),
-    topic_id: Optional[str] = typer.Option(None, "--topic-id"),
+    firstname: str | None = typer.Option(None, "--firstname"),
+    lastname: str | None = typer.Option(None, "--lastname"),
+    topic_id: str | None = typer.Option(None, "--topic-id"),
 ):
     mailing_list = MailingList()
     mailing_list.unsubscribe(
@@ -743,7 +741,7 @@ def create_mailing_list(
     emailids: str = typer.Option(
         ..., "--emails", "-e", help="Comma separated list of up to 10 email addresses"
     ),
-    listdescription: Optional[str] = typer.Option(None, "--description"),
+    listdescription: str | None = typer.Option(None, "--description"),
 ):
     keys_list = [k.strip() for k in emailids.split(",") if k.strip()]
     mailing_list = MailingList()
@@ -766,7 +764,7 @@ def create_custom_field(
             "textarea/RadioOption/Multiselect/DateTime/Decimal/Percent"
         ),
     ),
-    fieldlength: Optional[int] = typer.Option(
+    fieldlength: int | None = typer.Option(
         None, "--fieldlength", help="Defaults to 20 if not provided"
     ),
 ):

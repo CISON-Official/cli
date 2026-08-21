@@ -1,34 +1,28 @@
-#!/usr/bin/env python3
-
-import os
-import asyncio
 import logging
-from time import sleep
-from pdb import set_trace
-from typing import Iterable
-from datetime import datetime
+import os
 from dataclasses import asdict
+from datetime import datetime
 
+import pandas as pd
 import tqdm
 import typer
-import pandas as pd
 from jinja2 import Template
+
+from src.__cloudflare import upload_template_to_server, wait_until_accessible
+from src.commands.user import User
 
 # from src.loader import GlobalLoader
 from src.config import setting
-from src.commands.payments import Payments
-from src.fixtures import users as fixUsers
 from src.email.campaigns import EmailCampaign
-from src.types import Payments as PType, Paid
 from src.email.mailing_list import MailingList
-from src.commands.user import User
+from src.email.utils import wait_until_mailingkey_accessible
+from src.fixtures import users as fixUsers
+from src.types import Payments as PType
 from src.utils import (
     create_disk_cached_function,
-    suppress_output,
     find_sub_combinations,
+    suppress_output,
 )
-from src.email.utils import wait_until_mailingkey_accessible
-from src.__cloudflare import upload_template_to_server, wait_until_accessible
 
 logger = logging.getLogger("notification")
 
@@ -89,7 +83,7 @@ def send_payment_notification(
         if not (value) and value is not None:
             fees.append(key)
 
-    html = generate_html(dict(fees=format_fee_list(fees)))
+    html = generate_html({"fees": format_fee_list(fees)})
     logger.info("HTML generated..")
     file_name = (
         f"outstanding_payments{str(datetime.now().timestamp()).replace('.', '')}.html"
@@ -196,7 +190,7 @@ def send_payment_notification_for_zero_payment():
             if not (value) and value is not None:
                 fees.append(key)
 
-        html = generate_html(dict(fees=format_fee_list(fees)))
+        html = generate_html({"fees": format_fee_list(fees)})
         logger.info("HTML generated..")
         file_name = f"outstanding_payments{str(datetime.now().timestamp()).replace('.', '')}.html"
 
@@ -209,7 +203,7 @@ def send_payment_notification_for_zero_payment():
 
         public_url = f"http://{setting.CLOUDFLARE_SUBDOMAIN}.{setting.CLOUDFLARE_MAIN_DOMAIN}/{file_name}"
         count = len(correct_users) // int(setting.MAILINGLIST_LIMIT)
-        for j in range(0, count + 1):
+        for j in range(count + 1):
             segment_user = correct_users[j : (j + 1) * int(setting.MAILINGLIST_LIMIT)]
             mailing = MailingList()
             mailinglist = mailing.create_mailing_list(
@@ -244,7 +238,7 @@ def send_payment_notification_for_zero_payment():
                 )
 
             if campaignkey:
-                status = EmailCampaign().send_campaign(
+                EmailCampaign().send_campaign(
                     campaignkey=campaignkey, list_details=[str(mailinglist)]
                 )
 
@@ -312,7 +306,7 @@ def send_conference_remainder(
             )
             logger.info(f"Splitting the data into '{count}' parts")
 
-        for key in range(0, count + 1):
+        for key in range(count + 1):
             if not mailing:
                 logger.info("Creating mailing list")
                 first = mailinglist.create_mailing_list(

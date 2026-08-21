@@ -1,29 +1,24 @@
-#!/usr/bin/env python3
-
-import uuid
-import logging
 import json as ajson
+import logging
+import uuid
+from datetime import datetime
 from time import sleep
 from typing import Optional
-from datetime import datetime
-
 
 import pika
 import typer
-import pandas as pd
-from tqdm import tqdm
-from rich import print
 from requests import Session
-from rich.table import Table
-from rich.progress import track
+from rich import print
 from rich.console import Console
+from rich.progress import track
+from rich.table import Table
 
-from src.config import setting
-from src.utils import get_headers
 from src.commands.user import User
-from src.gui.print import print_error_panel
-from src.utils import create_disk_cached_function
+from src.config import setting
 from src.decorators import api_caller, silence_stdout
+from src.gui.print import print_error_panel
+from src.types import OutputFormat
+from src.utils import create_disk_cached_function, get_headers, save_dataframe
 
 app = typer.Typer(name="membership")
 console = Console()
@@ -33,7 +28,7 @@ logger = logging.getLogger(__name__)
 class Membership:
     @api_caller
     @staticmethod
-    def get_membership_certificate(user_id: int, **kwargs) -> Optional[dict[str, str]]:
+    def get_membership_certificate(user_id: int, **kwargs) -> dict[str, str] | None:
 
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
@@ -42,15 +37,15 @@ class Membership:
         response = session.get(
             f"{root_url.rstrip('/')}/certificate",
             headers=get_headers(token),
-            json=dict(user_id=user_id),
+            json={"user_id": user_id},
         )
         response.raise_for_status()
 
     @api_caller
     @staticmethod
     def check_for_certificates(
-        member_id: Optional[int] = None, user_id: Optional[int] = None, **kwargs
-    ) -> tuple[bool, Optional[dict]]:
+        member_id: int | None = None, user_id: int | None = None, **kwargs
+    ) -> tuple[bool, dict | None]:
 
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
@@ -63,7 +58,7 @@ class Membership:
         response = session.get(
             f"{root_url.rstrip('/')}/certificate",
             headers=get_headers(token),
-            json=dict(user_id=user_id),
+            json={"user_id": user_id},
         )
         response.raise_for_status()
         with open("sleeping.json", "w") as file:
@@ -86,7 +81,7 @@ class Membership:
     @staticmethod
     def create_certificates(
         member_id: str, user_id=Optional[int], **kwargs
-    ) -> Optional[dict]:
+    ) -> dict | None:
 
         # try:
         print("Creating certificate...")
@@ -110,32 +105,32 @@ class Membership:
             response = session.post(
                 f"{root_url.rstrip('/')}/cert/add-new",
                 headers=get_headers(token),
-                json=dict(user_id=user_id, member_id=member_id),  # type: ignore
+                json={"user_id": user_id, "member_id": member_id},  # type: ignore
             )
             response.raise_for_status()
 
         cert_data = session.get(
             f"{root_url.rstrip('/')}/certificate",
-            json=dict(user_id=user_id),  # type: ignore
+            json={"user_id": user_id},  # type: ignore
             headers=get_headers(token),
         )
         cert_data.raise_for_status()
-        new_user = list(
+        new_user = next(
             filter(
                 lambda x: x["member_id"] == member_id,
                 cert_data.json()["data"],
             )
-        )[0]
+        )
 
-        data = dict(
-            name=f"{new_user['surname']} {new_user['firstname']} {new_user['middlename']}",
-            current_date=datetime.fromtimestamp(
+        data = {
+            "name": f"{new_user['surname']} {new_user['firstname']} {new_user['middlename']}",
+            "current_date": datetime.fromtimestamp(
                 float(new_user["date_issued"])
             ).strftime("%d/%m/%Y"),
-            membership_id=str(member_id),
-            certificate_id=str(new_user["cert_id"]),
-            email=new_user["email"],
-        )
+            "membership_id": str(member_id),
+            "certificate_id": str(new_user["cert_id"]),
+            "email": new_user["email"],
+        }
 
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(host="localhost")
@@ -181,7 +176,7 @@ class Membership:
         response = session.get(
             f"{root_url.rstrip('/')}/cert/get-qualified-candidate",
             headers=get_headers(token),
-            json=dict(email=setting.ADMIN_EMAIL),
+            json={"email": setting.ADMIN_EMAIL},
         )
 
         data = response.json().get("data")
@@ -227,7 +222,7 @@ def checking_if_a_user_have_certificate(
     help="CLI command for triggering membership certificate creation",
 )
 def create_certificates(
-    user_id: Optional[int] = typer.Option(
+    user_id: int | None = typer.Option(
         None, "--user-id", "-u", help="The actual user ID"
     ),
     member_id: str = typer.Argument(..., help="Member ID of the user"),
@@ -245,7 +240,6 @@ def create_certificates(
     help="CLI Command to get eligible members for issuing membership certificates",
 )
 def get_eligible(ctx: typer.Context):
-    loader = ctx.obj
     logger.info("Retrieving members eligible for membership certificate...")
 
     if ctx.obj:
@@ -282,8 +276,6 @@ def create_bulk_certificates(
     member_ids: list[str] = typer.Argument(..., help="Bulk Member ID of all the users"),
 ):
 
-    loader = ctx.obj
-
     # 1. Update the generic loader state message
     logger.info(f"Preparing data structures for {len(member_ids)} members...")
     sleep(1)
@@ -308,4 +300,11 @@ def get_all_certificate():
     )
 
     certificates = get_cached_certificates()
-    print(certificates)
+
+    data = certificates["data"]
+    save_dataframe(
+        data=data,
+        filename="complete-certificates",
+        default_name="complete_certificates",
+        output_format=OutputFormat.csv,
+    )

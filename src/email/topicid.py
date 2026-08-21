@@ -1,13 +1,8 @@
-#!/usr/bin/env python3
-
 """Topic operations for the Zoho Campaigns API."""
 
-from typing import Optional
-
-import typer
-import requests
-
 import questionary
+import requests
+import typer
 from rich.console import Console
 from rich.table import Table
 
@@ -58,8 +53,8 @@ def display_products(data: dict) -> None:
 class EmailTopic(EmailBase):
     def get_topics(
         self,
-        from_index: Optional[int] = None,
-        range: Optional[int] = None,
+        from_index: int | None = None,
+        range: int | None = None,
     ) -> list:
         try:
             details = {}
@@ -94,8 +89,8 @@ class EmailTopic(EmailBase):
 
     def get_products(
         self,
-        from_index: Optional[int] = None,
-        range: Optional[int] = None,
+        from_index: int | None = None,
+        range: int | None = None,
     ) -> list:
         try:
             details = {}
@@ -132,7 +127,7 @@ class EmailTopic(EmailBase):
         self,
         topic_name: str,
         topic_desc: str,
-        product_id: Optional[str] = None,
+        product_id: str | None = None,
     ) -> None:
         try:
             details = {
@@ -171,8 +166,8 @@ class EmailTopic(EmailBase):
 
 @app.command("get-topics")
 def get_topics(
-    from_index: Optional[int] = typer.Option(None, "--from-index"),
-    range: Optional[int] = typer.Option(None, "--range"),
+    from_index: int | None = typer.Option(None, "--from-index"),
+    range: int | None = typer.Option(None, "--range"),
 ) -> None:
     topic = EmailTopic()
     topic.get_topics(from_index=from_index, range=range)
@@ -180,8 +175,8 @@ def get_topics(
 
 @app.command("get-products")
 def get_products(
-    from_index: Optional[int] = typer.Option(None, "--from-index"),
-    range: Optional[int] = typer.Option(None, "--range"),
+    from_index: int | None = typer.Option(None, "--from-index"),
+    range: int | None = typer.Option(None, "--range"),
 ) -> None:
     topic = EmailTopic()
     topic.get_products(from_index=from_index, range=range)
@@ -201,7 +196,7 @@ def create_topic() -> None:
         default=False,
     ).ask()
 
-    product_id: Optional[str] = None
+    product_id: str | None = None
     if is_brand_product:
         product_id = questionary.text("Enter the Product ID for this topic:").ask()
 

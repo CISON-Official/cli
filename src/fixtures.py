@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
-
 from src.config import setting
-from src.types import Payments as PType, Paid
+from src.types import Paid
+from src.types import Payments as PType
 
 users: list[PType] = [
     PType(

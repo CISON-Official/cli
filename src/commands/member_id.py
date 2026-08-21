@@ -1,13 +1,10 @@
-#!/usr/bin/env python3
-
-import typer
 import pandas as pd
-from rich import print
+import typer
 from requests import Session
+from rich import print
 
-
-from src.utils import get_headers
 from src.decorators import api_caller
+from src.utils import get_headers
 
 app = typer.Typer(name="memberid")
 

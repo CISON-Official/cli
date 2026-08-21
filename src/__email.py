@@ -1,11 +1,10 @@
-#!/usr/bin/env python3
 import requests
 
 from src.config import setting
 
 
 def get_access_token():
-    url = f"https://accounts.zoho.com/oauth/v2/token"
+    url = "https://accounts.zoho.com/oauth/v2/token"
 
     params = {
         "refresh_token": setting.REFRESH_TOKEN,

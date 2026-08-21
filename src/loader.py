@@ -1,6 +1,6 @@
 # Inside src/logger.py
-import os
 import logging
+import os
 from datetime import datetime
 
 

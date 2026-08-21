@@ -1,10 +1,9 @@
-#!/usr/bin/env python3
-import typer
 import pandas as pd
+import typer
 from requests import Session
 
-from src.utils import get_headers
 from src.decorators import api_caller
+from src.utils import get_headers
 
 
 class Payments:
@@ -25,7 +24,7 @@ class Payments:
 
             data = pd.read_json(response.json()["data"])
             return data
-        except Exception as e:
+        except Exception:
             raise typer.Exit(1)
 
     @api_caller
@@ -45,7 +44,7 @@ class Payments:
 
             data = pd.read_json(response.json()["data"])
             return data
-        except Exception as e:
+        except Exception:
             raise typer.Exit(1)
 
     @api_caller

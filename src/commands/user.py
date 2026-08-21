@@ -1,27 +1,23 @@
-#!/usr/bin/env python3
-
-from typing import Optional
-
+import pandas as pd
 import tqdm
 import typer
-import pandas as pd
-from rich import print
 from requests import Session
 from requests.exceptions import HTTPError
+from rich import print
 
-from src.utils import get_headers
-from src.decorators import api_caller
 from src.commands.payments import Payments
+from src.decorators import api_caller
 from src.gui.print import print_error_panel
 from src.gui.tables import display_user_details
+from src.types import OutputFormat
 from src.utils import (
     clean_nigerian_states,
+    convert_to_vcf,
     create_disk_cached_function,
     export_member_data_by_state,
-    convert_to_vcf,
+    get_headers,
     save_dataframe,
 )
-from src.types import OutputFormat
 
 app = typer.Typer(name="user")
 
@@ -29,7 +25,7 @@ app = typer.Typer(name="user")
 class User:
     @api_caller
     @staticmethod
-    def get_user_id_from_member_id(member_id: int, **kwargs) -> Optional[None]:
+    def get_user_id_from_member_id(member_id: int, **kwargs) -> None:
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
         root_url: str = kwargs["root_url"]
@@ -38,7 +34,7 @@ class User:
             response = session.get(
                 f"{root_url.rstrip('/')}/user_id",
                 headers=get_headers(token),
-                json=dict(member_id=member_id),
+                json={"member_id": member_id},
             )
 
             response.raise_for_status()
@@ -56,7 +52,7 @@ class User:
 
     @api_caller
     @staticmethod
-    def get_user_information(user_id: int, **kwargs) -> Optional[dict[str, str]]:
+    def get_user_information(user_id: int, **kwargs) -> dict[str, str] | None:
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
         root_url: str = kwargs["root_url"]
@@ -65,7 +61,7 @@ class User:
             response = session.get(
                 f"{root_url.rstrip('/')}/user",
                 headers=get_headers(token),
-                json=dict(user_id=user_id),
+                json={"user_id": user_id},
             )
 
             response.raise_for_status()
@@ -107,7 +103,7 @@ class User:
 
     @api_caller
     @staticmethod
-    def all_info_about_users(*args, **kwargs) -> Optional[dict]:
+    def all_info_about_users(*args, **kwargs) -> dict | None:
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
         root_url: str = kwargs["root_url"]
@@ -129,7 +125,7 @@ class User:
 
     @api_caller
     @staticmethod
-    def all_users_with_partial_payment(*args, **kwargs) -> Optional[dict]:
+    def all_users_with_partial_payment(*args, **kwargs) -> dict | None:
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
         root_url: str = kwargs["root_url"]
@@ -151,7 +147,7 @@ class User:
 
     @api_caller
     @staticmethod
-    def all_users_without_payment(*args, **kwargs) -> Optional[dict]:
+    def all_users_without_payment(*args, **kwargs) -> dict | None:
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
         root_url: str = kwargs["root_url"]
@@ -172,7 +168,7 @@ class User:
 
     @api_caller
     @staticmethod
-    def all_users_with_complete_payment(*args, **kwargs) -> Optional[dict]:
+    def all_users_with_complete_payment(*args, **kwargs) -> dict | None:
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
         root_url: str = kwargs["root_url"]
@@ -349,7 +345,7 @@ def complete_payment_with_certificates():
 @app.command("partial-payments")
 def get_partial_payments(
     ctx: typer.Context,
-    filename: Optional[str] = typer.Option(
+    filename: str | None = typer.Option(
         None,
         "--filename",
         "-f",
@@ -381,7 +377,7 @@ def get_partial_payments(
 @app.command("no-payments")
 def get_no_payments(
     ctx: typer.Context,
-    filename: Optional[str] = typer.Option(
+    filename: str | None = typer.Option(
         None,
         "--filename",
         "-f",
@@ -413,7 +409,7 @@ def get_no_payments(
 @app.command("complete-payments")
 def get_complete_payments(
     ctx: typer.Context,
-    filename: Optional[str] = typer.Option(
+    filename: str | None = typer.Option(
         None,
         "--filename",
         "-f",

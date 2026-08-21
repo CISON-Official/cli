@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import typer
 
 from src.commands.certificates.membership import app as membership_app

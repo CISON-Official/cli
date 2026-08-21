@@ -1,10 +1,8 @@
-#!/usr/bin/env python3
 """Rich progress bar and spinner helpers for long-running CLI operations."""
 
 from __future__ import annotations
 
-from typing import Callable
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 
 from rich.console import Console

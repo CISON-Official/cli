@@ -1,19 +1,17 @@
-#!/usr/bin/env python3
-
 """Campaign operations for the Zoho Campaigns API."""
 
 import json
-from typing import Optional, Literal, Union
-
-import typer
-import requests
+from typing import Literal
 
 import questionary
+import requests
+import typer
+
 from src.config import setting
 from src.email.base import EmailBase
 from src.exception import handle_error
 from src.gui.print import print_error_panel, print_success_panel
-from src.gui.tables import display_single_campaign_details, display_all_campaigns
+from src.gui.tables import display_all_campaigns, display_single_campaign_details
 
 app = typer.Typer(
     name="campaign",
@@ -79,9 +77,9 @@ class EmailCampaign(EmailBase):
     def list_campaigns(
         self,
         sort: Literal["asc", "desc"] = "asc",
-        status: Union[CampaignStatus, list[CampaignStatus]] = "all",
-        fromindex: Optional[int] = None,
-        range: Optional[int] = None,
+        status: CampaignStatus | list[CampaignStatus] = "all",
+        fromindex: int | None = None,
+        range: int | None = None,
     ) -> list:
         try:
             self.params["sort"] = sort
@@ -118,7 +116,7 @@ class EmailCampaign(EmailBase):
         subject: str,
         list_details: list[str],
         content_url: str,
-    ) -> Optional[str]:
+    ) -> str | None:
         try:
             list_details_dict = {list_key: [] for list_key in list_details}
 
@@ -163,7 +161,9 @@ class EmailCampaign(EmailBase):
             print_error_panel(f"Unexpected error: {e}")
             return None
 
-    def send_campaign(self, campaignkey: str, list_details=[]) -> bool:
+    def send_campaign(self, campaignkey: str, list_details=None) -> bool:
+        if list_details is None:
+            list_details = []
         try:
             list_details_dict = {list_key: [] for list_key in list_details}
             list_details_json_string = json.dumps(list_details_dict)
@@ -201,8 +201,8 @@ class EmailCampaign(EmailBase):
         schedulehour: str,
         scheduleminute: str,
         am_pm: Literal["AM", "PM"],
-        istimewarp: Optional[bool] = None,
-        sendingtz: Optional[str] = None,
+        istimewarp: bool | None = None,
+        sendingtz: str | None = None,
     ) -> bool:
         try:
             self.params["resfmt"] = "JSON"
@@ -242,9 +242,9 @@ class EmailCampaign(EmailBase):
         oldcampaignkey: str,
         campaignname: str,
         subject: str,
-        from_name: Optional[str] = None,
-        from_add: Optional[str] = None,
-        reply_to: Optional[str] = None,
+        from_name: str | None = None,
+        from_add: str | None = None,
+        reply_to: str | None = None,
     ) -> None:
         try:
             campaigninfo = {
@@ -282,7 +282,7 @@ class EmailCampaign(EmailBase):
             print_error_panel("Error while decoding to json")
             return
 
-    def campaign_reports(self, campaignkey: str) -> Optional[dict]:
+    def campaign_reports(self, campaignkey: str) -> dict | None:
         try:
             self.params["resfmt"] = "JSON"
             self.params["campaignkey"] = campaignkey
@@ -306,7 +306,7 @@ class EmailCampaign(EmailBase):
             print_error_panel("Error while decoding to json")
             return None
 
-    def recently_sent_campaigns(self) -> Optional[dict]:
+    def recently_sent_campaigns(self) -> dict | None:
         try:
             self.params["resfmt"] = "JSON"
 
@@ -329,7 +329,7 @@ class EmailCampaign(EmailBase):
             print_error_panel("Error while decoding to json")
             return None
 
-    def last_campaign_report(self) -> Optional[dict]:
+    def last_campaign_report(self) -> dict | None:
         try:
             self.params["resfmt"] = "JSON"
 
@@ -354,7 +354,7 @@ class EmailCampaign(EmailBase):
 
     def campaign_recipients_data(
         self, campaignkey: str, action: RecipientAction
-    ) -> Optional[dict]:
+    ) -> dict | None:
         try:
             self.params["resfmt"] = "JSON"
             self.params["campaignkey"] = campaignkey
@@ -382,7 +382,7 @@ class EmailCampaign(EmailBase):
             print_error_panel("Error while decoding to json")
             return None
 
-    def view_coupon_details(self, couponcode: str) -> Optional[dict]:
+    def view_coupon_details(self, couponcode: str) -> dict | None:
         try:
             self.params["type"] = "json"
             self.params["couponCode"] = couponcode
@@ -475,7 +475,7 @@ def list_campaigns(
     range: int = typer.Option(100, "--range"),
 ) -> None:
     campaign = EmailCampaign()
-    kwargs = dict()
+    kwargs = {}
 
     status_choices = [
         "all",

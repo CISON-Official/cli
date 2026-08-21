@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import logging
 import subprocess
 
@@ -6,21 +5,21 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from src.loader import LoggingManager
-from src.config import (
-    is_configured,
-    get_setting_keys,
-    ENV_PATH,
-    CONFIG_DIR,
-    get_config,
-    Settings,
-)
-from src.send import app as send_app
-from src.email import app as email_app
-from src.commands.user import app as user_app
-from src.utils import clear_disk_cache, USER_CACHE_DIR
-from src.commands.member_id import app as memberid_app
 from src.commands.certificates import app as certificate_app
+from src.commands.member_id import app as memberid_app
+from src.commands.user import app as user_app
+from src.config import (
+    CONFIG_DIR,
+    ENV_PATH,
+    Settings,
+    get_config,
+    get_setting_keys,
+    is_configured,
+)
+from src.email import app as email_app
+from src.loader import LoggingManager
+from src.send import app as send_app
+from src.utils import USER_CACHE_DIR, clear_disk_cache
 
 LoggingManager.setup_logging(base_dir="logs", log_level=logging.INFO)
 

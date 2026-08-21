@@ -1,7 +1,5 @@
-#!/usr/bin/env python3
-from enum import Enum
-from typing import Optional
 from dataclasses import dataclass
+from enum import Enum
 
 
 @dataclass
@@ -35,15 +33,15 @@ class Payments:
 
 @dataclass
 class Paid:
-    annual_dues_2026: Optional[bool] = None
-    dev_levy_2026: Optional[bool] = None
-    nsa_dues: Optional[bool] = None
-    annual_dues_2025: Optional[bool] = None
-    dev_levy_2025: Optional[bool] = None
-    annual_dues_2024: Optional[bool] = None
-    dev_levy_2024: Optional[bool] = None
-    new_member_fee: Optional[bool] = None
-    transition_fee: Optional[bool] = None
+    annual_dues_2026: bool | None = None
+    dev_levy_2026: bool | None = None
+    nsa_dues: bool | None = None
+    annual_dues_2025: bool | None = None
+    dev_levy_2025: bool | None = None
+    annual_dues_2024: bool | None = None
+    dev_levy_2024: bool | None = None
+    new_member_fee: bool | None = None
+    transition_fee: bool | None = None
 
     @staticmethod
     def from_dict(data: dict[str, str | bool]) -> Paid:
@@ -60,18 +58,18 @@ class Paid:
             transition_fee=data.get("transition_fee"),  # type: ignore
         )
 
-    def to_dict(self) -> dict[str, Optional[bool]]:
-        return dict(
-            annual_dues_2026=self.annual_dues_2026,
-            dev_levy_2026=self.dev_levy_2026,
-            nsa_dues=self.nsa_dues,
-            annual_dues_2025=self.annual_dues_2025,
-            dev_levy_2025=self.dev_levy_2025,
-            annual_dues_2024=self.annual_dues_2024,
-            dev_levy_2024=self.dev_levy_2024,
-            new_member_fee=self.new_member_fee,
-            transition_fee=self.transition_fee,
-        )
+    def to_dict(self) -> dict[str, bool | None]:
+        return {
+            "annual_dues_2026": self.annual_dues_2026,
+            "dev_levy_2026": self.dev_levy_2026,
+            "nsa_dues": self.nsa_dues,
+            "annual_dues_2025": self.annual_dues_2025,
+            "dev_levy_2025": self.dev_levy_2025,
+            "annual_dues_2024": self.annual_dues_2024,
+            "dev_levy_2024": self.dev_levy_2024,
+            "new_member_fee": self.new_member_fee,
+            "transition_fee": self.transition_fee,
+        }
 
 
 class OutputFormat(str, Enum):

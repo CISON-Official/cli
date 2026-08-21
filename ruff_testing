@@ -1,0 +1,617 @@
+BLE001 Do not catch blind exception: `Exception`
+  --> src/__cloudflare.py:32:12
+   |
+30 |                 return record
+31 |         return None
+32 |     except Exception as e:
+   |            ^^^^^^^^^
+33 |         logger.error(f"Error fetching record: {e}")
+34 |         return None
+   |
+
+ASYNC251 Async functions should not call `time.sleep`
+  --> src/__cloudflare.py:75:9
+   |
+73 |         print(f"Successfully created: {new_record.name}")  # type: ignore
+74 |         logger.info("Waiting for ")
+75 |         time.sleep(600)
+   |         ^^^^^^^^^^
+
+BLE001 Do not catch blind exception: `Exception`
+   --> src/__cloudflare.py:121:12
+    |
+119 |     except requests.exceptions.ConnectionError:
+120 |         print(f"Unable to connect with {url_with_key}")
+121 |     except Exception as e:
+    |            ^^^^^^^^^
+122 |         print(f"An error occurred: {e}")
+123 |         typer.Exit(1)
+    |
+
+EXE001 Shebang is present but file is not executable
+ --> src/commands/certificates/__init__.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | import typer
+  |
+
+EXE001 Shebang is present but file is not executable
+ --> src/commands/certificates/membership.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | import json as ajson
+  |
+
+UP045 Use `X | None` for type annotations
+  --> src/commands/certificates/membership.py:85:33
+   |
+83 |     @staticmethod
+84 |     def create_certificates(
+85 |         member_id: str, user_id=Optional[int], **kwargs
+   |                                 ^^^^^^^^^^^^^
+86 |     ) -> dict | None:
+   |
+help: Convert to `X | None`
+
+DTZ006 `datetime.datetime.fromtimestamp()` called without a `tz` argument
+   --> src/commands/certificates/membership.py:127:29
+    |
+125 |           data = {
+126 |               "name": f"{new_user['surname']} {new_user['firstname']} {new_user['middlename']}",
+127 |               "current_date": datetime.fromtimestamp(
+    |  _____________________________^
+128 | |                 float(new_user["date_issued"])
+129 | |             ).strftime("%d/%m/%Y"),
+    | |_____________^
+130 |               "membership_id": str(member_id),
+131 |               "certificate_id": str(new_user["cert_id"]),
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+BLE001 Do not catch blind exception: `Exception`
+   --> src/commands/certificates/membership.py:206:16
+    |
+204 |             response.raise_for_status()
+205 |             return response.json()
+206 |         except Exception:
+    |                ^^^^^^^^^
+207 |             return {}
+    |
+
+B008 Do not perform function call `typer.Argument` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> src/commands/certificates/membership.py:215:15
+    |
+213 | )
+214 | def checking_if_a_user_have_certificate(
+215 |     member_id=typer.Argument(..., help="member_id of a user to get the actual ID"),
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+216 | ):
+217 |     Membership.check_for_certificates(member_id)
+    |
+
+B008 Do not perform function call `typer.Argument` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> src/commands/certificates/membership.py:276:29
+    |
+274 | def create_bulk_certificates(
+275 |     ctx: typer.Context,
+276 |     member_ids: list[str] = typer.Argument(..., help="Bulk Member ID of all the users"),
+    |                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+277 | ):
+    |
+
+EXE001 Shebang is present but file is not executable
+ --> src/commands/certificates/prs.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | import typer
+  |
+
+EXE001 Shebang is present but file is not executable
+ --> src/commands/member_id.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | import pandas as pd
+  |
+
+EXE001 Shebang is present but file is not executable
+ --> src/commands/payments.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 | import pandas as pd
+3 | import typer
+  |
+
+BLE001 Do not catch blind exception: `Exception`
+  --> src/commands/payments.py:28:16
+   |
+26 |             data = pd.read_json(response.json()["data"])
+27 |             return data
+28 |         except Exception:
+   |                ^^^^^^^^^
+29 |             raise typer.Exit(1)
+   |
+
+BLE001 Do not catch blind exception: `Exception`
+  --> src/commands/payments.py:48:16
+   |
+46 |             data = pd.read_json(response.json()["data"])
+47 |             return data
+48 |         except Exception:
+   |                ^^^^^^^^^
+49 |             raise typer.Exit(1)
+   |
+
+BLE001 Do not catch blind exception: `Exception`
+  --> src/commands/payments.py:68:16
+   |
+66 |             return response.json()["data"]
+67 |
+68 |         except Exception as e:
+   |                ^^^^^^^^^
+69 |             print(e)
+70 |             raise typer.Exit(1)
+   |
+
+EXE001 Shebang is present but file is not executable
+ --> src/commands/user.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+
+BLE001 Do not catch blind exception: `Exception`
+   --> src/commands/user.py:103:16
+    |
+101 |             response.raise_for_status()
+102 |             return response.json()
+103 |         except Exception as e:
+    |                ^^^^^^^^^
+104 |             print_error_panel(str(e))
+105 |             typer.Exit(1)
+    |
+
+B008 Do not perform function call `typer.Argument` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> src/commands/user.py:227:15
+    |
+225 | @app.command(name="get-memberid")
+226 | def get_user_id_from_member_id(
+227 |     member_id=typer.Argument(..., help="member_id of a user to get the actual ID"),
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+228 | ):
+229 |     User.get_user_id_from_member_id(member_id)
+    |
+
+B008 Do not perform function call `typer.Argument` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> src/commands/user.py:233:34
+    |
+232 | @app.command(name="about")
+233 | def get_user_information(user_id=typer.Argument(..., help="The actual ID of a user")):
+    |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+234 |     response = User.get_user_information(user_id)
+235 |     if response:
+    |
+
+B008 Do not perform function call `typer.Argument` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> src/commands/user.py:241:15
+    |
+239 | @app.command(name="uifmid", help="User Information from Member ID")
+240 | def get_user_information_from_member_id(
+241 |     member_id=typer.Argument(..., help="member_id of a user to get the actual ID"),
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+242 | ):
+243 |     response1 = User.get_user_id_from_member_id(member_id)
+    |
+
+B008 Do not perform function call `typer.Option` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> src/commands/user.py:357:25
+    |
+355 |           help="Output filename (defaults to command name: partial-payments)",
+356 |       ),
+357 |       fmt: OutputFormat = typer.Option(
+    |  _________________________^
+358 | |         OutputFormat.csv,
+359 | |         "--format",
+360 | |         "-fmt",
+361 | |         help="Format to save output to",
+362 | |     ),
+    | |_____^
+363 |   ):
+364 |       """Fetch all users with partial payments and save to disk."""
+    |
+
+B008 Do not perform function call `typer.Option` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> src/commands/user.py:389:25
+    |
+387 |           help="Output filename (defaults to command name: no-payments)",
+388 |       ),
+389 |       fmt: OutputFormat = typer.Option(
+    |  _________________________^
+390 | |         OutputFormat.csv,
+391 | |         "--format",
+392 | |         "-fmt",
+393 | |         help="Format to save output to",
+394 | |     ),
+    | |_____^
+395 |   ):
+396 |       """Fetch all users without any payments and save to disk."""
+    |
+
+B008 Do not perform function call `typer.Option` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> src/commands/user.py:421:25
+    |
+419 |           help="Output filename (defaults to command name: complete-payments)",
+420 |       ),
+421 |       fmt: OutputFormat = typer.Option(
+    |  _________________________^
+422 | |         OutputFormat.csv,
+423 | |         "--format",
+424 | |         "-fmt",
+425 | |         help="Format to save output to",
+426 | |     ),
+    | |_____^
+427 |   ):
+428 |       """Fetch all users with complete payments and save to disk."""
+    |
+
+TRY002 Create your own exception
+  --> src/decorators.py:32:23
+   |
+30 |                 return func(*args, **kwargs)
+31 |             else:
+32 |                 raise Exception(f"Unable to authenticate user {response.text}")
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+33 |
+34 |     return wrapper
+   |
+
+SIM115 Use a context manager for opening files
+  --> src/decorators.py:40:18
+   |
+38 | def silence_stdout():
+39 |     old_stdout = sys.stdout
+40 |     sys.stdout = open(os.devnull, "w")
+   |                  ^^^^
+41 |     try:
+42 |         yield
+   |
+
+BLE001 Do not catch blind exception: `Exception`
+   --> src/email/campaigns.py:160:16
+    |
+158 |                 print_error_panel(f"Response: {e.response.text}")
+159 |             return None
+160 |         except Exception as e:
+    |                ^^^^^^^^^
+161 |             print_error_panel(f"Unexpected error: {e}")
+162 |             return None
+    |
+
+EXE001 Shebang is present but file is not executable
+ --> src/email/mailing_list.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | from copy import deepcopy
+  |
+
+B008 Do not perform function call `typer.Option` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> src/email/mailing_list.py:535:13
+    |
+533 | def get_mailing_list(
+534 |     ctx: typer.Context,
+535 |     listkey=typer.Option(None, "--listkey", "-l", help="Mailing List listkey"),
+    |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+536 |     sort: Literal["asc", "desc"] = typer.Option("asc", "--sort"),
+537 |     fromindex: int = typer.Option(1, "--fromindex"),
+    |
+
+B008 Do not perform function call `typer.Argument` in argument defaults; instead, perform the call within the function, or read the default from a module-level singleton variable
+   --> src/email/mailing_list.py:649:33
+    |
+647 | @app.command(name="delete", help="delete a mailing list using the listkey")
+648 | def delete_mailing_list(
+649 |     ctx: typer.Context, listkey=typer.Argument(..., help="Mailing List listkey")
+    |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+650 | ):
+651 |     # loader = ctx.obj
+    |
+
+F821 Undefined name `require_non_empty`
+  --> src/email/reports.py:64:24
+   |
+62 |             [{'email': 'jane@example.com', 'clicked_link': 'https://...'}, ...]
+63 |         """
+64 |         campaign_key = require_non_empty(campaign_key, field_name="campaign_key")
+   |                        ^^^^^^^^^^^^^^^^^
+65 |         params = {
+66 |             "campaignkey": campaign_key,
+   |
+
+F821 Undefined name `require_non_empty`
+   --> src/email/reports.py:99:24
+    |
+ 97 |             [{'email': 'bad@example.com', 'bounce_type': 'hard'}, ...]
+ 98 |         """
+ 99 |         campaign_key = require_non_empty(campaign_key, field_name="campaign_key")
+    |                        ^^^^^^^^^^^^^^^^^
+100 |         params = {
+101 |             "campaignkey": campaign_key,
+    |
+
+F821 Undefined name `require_non_empty`
+   --> src/email/reports.py:129:24
+    |
+127 |             [{'email': 'jane@example.com', 'unsub_time': '...'}, ...]
+128 |         """
+129 |         campaign_key = require_non_empty(campaign_key, field_name="campaign_key")
+    |                        ^^^^^^^^^^^^^^^^^
+130 |         params = {
+131 |             "campaignkey": campaign_key,
+    |
+
+F821 Undefined name `require_non_empty`
+   --> src/email/reports.py:158:24
+    |
+156 |             [{'email': 'jane@example.com', 'complaint_time': '...'}, ...]
+157 |         """
+158 |         campaign_key = require_non_empty(campaign_key, field_name="campaign_key")
+    |                        ^^^^^^^^^^^^^^^^^
+159 |         params = {
+160 |             "campaignkey": campaign_key,
+    |
+
+F821 Undefined name `require_non_empty`
+   --> src/email/reports.py:184:24
+    |
+182 |             {'sent': 1000, 'opens': 320, 'clicks': 88, 'bounces': 12}
+183 |         """
+184 |         campaign_key = require_non_empty(campaign_key, field_name="campaign_key")
+    |                        ^^^^^^^^^^^^^^^^^
+185 |         response = self.get(
+186 |             "getcampaignreportsummary", params={"campaignkey": campaign_key}
+    |
+
+EXE001 Shebang is present but file is not executable
+ --> src/gui/print.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | from typing import Any
+  |
+
+EXE001 Shebang is present but file is not executable
+ --> src/gui/progress.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 | """Rich progress bar and spinner helpers for long-running CLI operations."""
+  |
+
+EXE001 Shebang is present but file is not executable
+ --> src/gui/tables.py:1:1
+  |
+1 | #!/usr/bin/env python3
+  | ^^^^^^^^^^^^^^^^^^^^^^
+2 |
+3 | from datetime import datetime
+  |
+
+DTZ006 `datetime.datetime.fromtimestamp()` called without a `tz` argument
+   --> src/gui/tables.py:161:9
+    |
+160 |     sent_dt = (
+161 |         datetime.fromtimestamp(int(details["sent_time"]) / 1000).strftime(
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+162 |             "%Y-%m-%d %H:%M:%S"
+163 |         )
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ006 `datetime.datetime.fromtimestamp()` called without a `tz` argument
+  --> src/loader.py:15:24
+   |
+13 |         try:
+14 |             msg = self.format(record)
+15 |             log_time = datetime.fromtimestamp(record.created)
+   |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 |             year_dir = log_time.strftime("%Y")
+17 |             month_dir = log_time.strftime("%m")
+   |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+BLE001 Do not catch blind exception: `Exception`
+  --> src/loader.py:26:16
+   |
+24 |             with open(target_file_path, "a", encoding="utf-8") as f:
+25 |                 f.write(msg + "\n")
+26 |         except Exception:
+   |                ^^^^^^^^^
+27 |             self.handleError(record)
+   |
+
+PLW1510 `subprocess.run` without explicit `check` argument
+   --> src/main.py:123:14
+    |
+121 |     typer.secho("Updating CISON CLI...", fg=typer.colors.CYAN)
+122 |     cmd = ["uv", "tool", "install", "--force", INTERNAL_REPO_URL]
+123 |     result = subprocess.run(cmd, capture_output=True, text=True)
+    |              ^^^^^^^^^^^^^^
+124 |
+125 |     if result.returncode == 0:
+    |
+help: Add explicit `check=False`
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+  --> src/send.py:89:36
+   |
+87 |     logger.info("HTML generated..")
+88 |     file_name = (
+89 |         f"outstanding_payments{str(datetime.now().timestamp()).replace('.', '')}.html"
+   |                                    ^^^^^^^^^^^^^^
+90 |     )
+   |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:104:33
+    |
+102 |     first = mailinglist.create_mailing_list(
+103 |         emailids=[i.user_email for i in users],
+104 |         listname=f"mailinglist {datetime.now().timestamp()}",
+    |                                 ^^^^^^^^^^^^^^
+105 |         signupform="public",
+106 |         listdescription=f"Mailing List for Payment Notification for {datetime.now().timestamp()}",
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:106:70
+    |
+104 |         listname=f"mailinglist {datetime.now().timestamp()}",
+105 |         signupform="public",
+106 |         listdescription=f"Mailing List for Payment Notification for {datetime.now().timestamp()}",
+    |                                                                      ^^^^^^^^^^^^^^
+107 |     )
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:125:30
+    |
+123 |     campaign = EmailCampaign()
+124 |     campaign_key = campaign.create_campaign(
+125 |         f"Payment Remainder {datetime.now().timestamp()}",
+    |                              ^^^^^^^^^^^^^^
+126 |         "CISON | Overdue Payment Notice",
+127 |         list_details=[str(first)],
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:195:48
+    |
+193 |         html = generate_html({"fees": format_fee_list(fees)})
+194 |         logger.info("HTML generated..")
+195 |         file_name = f"outstanding_payments{str(datetime.now().timestamp()).replace('.', '')}.html"
+    |                                                ^^^^^^^^^^^^^^
+196 |
+197 |         with open(f"{root_dir}/{file_name}", "w") as file:
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:211:41
+    |
+209 |             mailinglist = mailing.create_mailing_list(
+210 |                 emailids=[w.user_email for w in segment_user[:10]],
+211 |                 listname=f"mailinglist {datetime.now().timestamp()}".replace(
+    |                                         ^^^^^^^^^^^^^^
+212 |                     ",", ""
+213 |                 ).replace(".", ""),
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:215:78
+    |
+213 |                 ).replace(".", ""),
+214 |                 signupform="public",
+215 |                 listdescription=f"Mailing List for Payment Notification for {datetime.now().timestamp()}",
+    |                                                                              ^^^^^^^^^^^^^^
+216 |             )
+217 |             with suppress_output():
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:234:63
+    |
+232 |                     ]
+233 |                 campaignkey = EmailCampaign().create_campaign(
+234 |                     campaign_name=f"Partial Payment Campaign {datetime.now().isoformat()}",
+    |                                                               ^^^^^^^^^^^^^^
+235 |                     subject="CISON | Overdue Payment Notice",
+236 |                     list_details=[str(mailinglist)],
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:268:48
+    |
+266 |         rendered_html = template.render()
+267 |
+268 |         file_name = f"conference_reminder-{str(datetime.now().timestamp()).replace('.', '').replace(' ', '_')}.html"
+    |                                                ^^^^^^^^^^^^^^
+269 |
+270 |         with open(f"room/{file_name}", "w") as file:
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:314:44
+    |
+312 |                 first = mailinglist.create_mailing_list(
+313 |                     emailids=[str(setting.EMAIL_ADMIN)],
+314 |                     listname=f"Conference {datetime.now().timestamp()}",
+    |                                            ^^^^^^^^^^^^^^
+315 |                     signupform="public",
+316 |                     listdescription=f"Mailing List for Payment Notification for {datetime.now().timestamp()}",
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:316:82
+    |
+314 |                     listname=f"Conference {datetime.now().timestamp()}",
+315 |                     signupform="public",
+316 |                     listdescription=f"Mailing List for Payment Notification for {datetime.now().timestamp()}",
+    |                                                                                  ^^^^^^^^^^^^^^
+317 |                 )
+318 |             else:
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+DTZ005 `datetime.datetime.now()` called without a `tz` argument
+   --> src/send.py:357:49
+    |
+355 |                 with suppress_output():
+356 |                     campaign_key = campaign.create_campaign(
+357 |                         f"Conference Remainder {datetime.now().timestamp()}",
+    |                                                 ^^^^^^^^^^^^^^
+358 |                         "CISON | 50th Annivasary Conference Notice",
+359 |                         list_details=[first],  # type: ignore
+    |
+help: Pass a `datetime.timezone` object to the `tz` parameter
+
+BLE001 Do not catch blind exception: `Exception`
+   --> src/send.py:373:12
+    |
+371 |                 logger.info("Unable to send campaign...")
+372 |
+373 |     except Exception as e:
+    |            ^^^^^^^^^
+374 |         print(e)
+    |
+
+BLE001 Do not catch blind exception: `Exception`
+   --> src/utils.py:296:12
+    |
+294 |         return True
+295 |
+296 |     except Exception as e:
+    |            ^^^^^^^^^
+297 |         print(f"Error while creating master vcard: {e}")
+298 |         return False
+    |
+
+Found 57 errors (1 fixed, 56 remaining).

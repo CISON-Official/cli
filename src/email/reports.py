@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Campaign reporting and analytics operations for the Zoho Campaigns API."""
 
 from __future__ import annotations
@@ -7,7 +6,6 @@ from typing import Any
 
 import requests
 
-from src.config import setting
 from src.email.base import EmailBase
 
 

@@ -1,19 +1,18 @@
-#!/usr/bin/env python3
+import contextlib
 import os
+import shutil
 import sys
 import time
-import shutil
-import contextlib
-from pathlib import Path
-from pdb import set_trace
+from collections.abc import Callable
 from itertools import permutations
-from typing import Any, Callable, Optional
+from pathlib import Path
+from typing import Any
 
-import typer
 import pandas as pd
+import typer
+from diskcache import Cache
 from rich.live import Live
 from rich.text import Text
-from diskcache import Cache
 
 from src.types import OutputFormat
 
@@ -26,13 +25,13 @@ def get_headers(token: str) -> dict:
 
 
 def count_occurenance(data: dict) -> dict:
-    counter: dict[str, int] = dict()
+    counter: dict[str, int] = {}
     for j in data:
         k = j.get("fees")
         if not (outstanding := k.get("unpaid")):
             print("continuing")
             continue
-        for i in outstanding.keys():
+        for i in outstanding:
             if not counter.get(i):
                 counter[i] = 0
             counter[i] = counter[i] + 1
@@ -40,7 +39,7 @@ def count_occurenance(data: dict) -> dict:
 
 
 def find_sub_combinations(data: list) -> dict[tuple, int]:
-    counter: dict[tuple, int] = dict()
+    counter: dict[tuple, int] = {}
 
     for j in data:
         if not isinstance(j, dict):
@@ -56,11 +55,11 @@ def find_sub_combinations(data: list) -> dict[tuple, int]:
         matching_keys = existing_keys & current_perms
 
         if matching_keys:
-            matched_key = list(matching_keys)[0]
+            matched_key = next(iter(matching_keys))
             counter[matched_key] += 1
             continue
 
-        new_key = list(current_perms)[0]
+        new_key = next(iter(current_perms))
         counter[new_key] = 1
 
     return counter
@@ -268,7 +267,6 @@ def convert_to_vcf(
     output_file_path = os.path.join(main_dir, filename)
 
     try:
-        #
         with open(output_file_path, "w", encoding="utf-8") as f:
             for row in data.itertuples(index=False):
                 first = getattr(row, "first_name", "") or ""
@@ -318,7 +316,7 @@ def suppress_output():
 
 def save_dataframe(
     data: dict | list,
-    filename: Optional[str],
+    filename: str | None,
     default_name: str,
     output_format: OutputFormat,
 ) -> None:
@@ -351,7 +349,7 @@ def save_dataframe(
 USER_CACHE_DIR = Path.home() / ".cison" / ".cache"
 
 
-def clear_disk_cache(sub_directory: str = None) -> int:  # type: ignore
+def clear_disk_cache(sub_directory: str | None = None) -> int:  # type: ignore
     """
     Clears the disk cache directory.
     Returns the number of cleared directories/files.
