@@ -6,6 +6,7 @@ from rich.console import Console
 from rich.table import Table
 
 from src.commands.certificates import app as certificate_app
+from src.commands.transactions import app as transaction_app
 from src.commands.member_id import app as memberid_app
 from src.commands.user import app as user_app
 from src.config import (
@@ -36,6 +37,7 @@ app.add_typer(send_app)
 app.add_typer(email_app)
 app.add_typer(memberid_app)
 app.add_typer(certificate_app)
+app.add_typer(transaction_app)
 
 INTERNAL_REPO_URL = "git+ssh://git@github.com/CISON-Official/cli.git"
 
