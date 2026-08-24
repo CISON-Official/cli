@@ -30,3 +30,8 @@ cison = "src.main:app"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.3.0",
+]
