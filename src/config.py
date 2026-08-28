@@ -1,20 +1,28 @@
 import inspect
 from pathlib import Path
 
-from decouple import Config, RepositoryEnv, UndefinedValueError
+from decouple import Config, RepositoryEnv, UndefinedValueError, config
 
 CONFIG_DIR = Path.home() / ".cison"
 ENV_PATH = CONFIG_DIR / ".env"
 
-
 def get_config():
-    """Load config from ~/.cison/.env or fall back to decouple defaults."""
+    package_src_dir = Path(__file__).resolve().parent
+    
+    local_env = None
+    for parent in [package_src_dir, package_src_dir.parent, package_src_dir.parent.parent]:
+        if (parent / ".env").exists() and (parent / "pyproject.toml").exists():
+            local_env = parent / ".env"
+            break
+
+    if local_env:
+        return Config(RepositoryEnv(local_env))
+        
     if ENV_PATH.exists():
+        print("using global env")
         return Config(RepositoryEnv(ENV_PATH))
-    from decouple import config
-
+        
     return config
-
 
 class Settings:
     BASE_URL = "https://api.cison.org"

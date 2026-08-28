@@ -25,3 +25,5 @@ data
 *.zip
 *.csv
 **.ipynb
+test.py
+.cison

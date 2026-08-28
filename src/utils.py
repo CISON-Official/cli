@@ -16,7 +16,21 @@ from rich.text import Text
 
 from src.types import OutputFormat
 
-USER_CACHE_DIR = Path.home() / ".cison" / ".cache"
+
+def get_dir():
+    package_src_dir = Path(__file__).resolve().parent
+
+    for parent in [
+        package_src_dir,
+        package_src_dir.parent,
+        package_src_dir.parent.parent,
+    ]:
+        if (parent / ".env").exists() and (parent / "pyproject.toml").exists():
+            return parent / ".cison"
+    return Path.home() / ".cison"
+
+
+USER_CACHE_DIR = get_dir() / ".cache"
 
 
 def get_headers(token: str) -> dict:
@@ -236,7 +250,7 @@ def create_disk_cached_function(
     cache_path.mkdir(parents=True, exist_ok=True)
 
     cache = Cache(str(cache_path))
-    return cache.memoize(expire=5_000_000)(api_func)
+    return cache.memoize(expire=5_000)(api_func)
 
 
 def zip_directory(folder_to_zip: str, output_zip_filename: str):
@@ -344,9 +358,6 @@ def save_dataframe(
         f"✓ Saved {len(df)} records to '{out_file.resolve()}'",
         fg=typer.colors.GREEN,
     )
-
-
-USER_CACHE_DIR = Path.home() / ".cison" / ".cache"
 
 
 def clear_disk_cache(sub_directory: str | None = None) -> int:  # type: ignore
