@@ -9,6 +9,7 @@ It utilizes Typer for CLI parsing and Requests for HTTP infrastructure.
 import ast
 import pdb
 import asyncio
+from typing import Literal, Optional
 from datetime import datetime, timedelta
 
 import typer
@@ -134,9 +135,15 @@ def get_transactions_command(
 
 @app.command(
     name="ptppc",
-    help="Command to return a file filled with people that paid for preconference and conference",
+    help="Command to return a file filled with people that paid for either preconference or conference or both",
 )
-def get_people_that_paid_for_preconference_and_conference(x: int):
+def get_people_that_paid_for_preconference_and_conference(
+    x: int,
+    transaction_type: Optional[Literal["preconference", "conference"]] = typer.Option(
+        default=None,
+        help="None implies that you'd want all of them, while listing any of their names, implies that you want a single of them",
+    ),
+):
     def _sync_conference(range_num: int):
         try:
             return Transactions.get_transactions(per_page=500, page=range_num)[
@@ -208,10 +215,19 @@ def get_people_that_paid_for_preconference_and_conference(x: int):
         lambda x: ast.literal_eval(x) if isinstance(x, str) else x
     )
 
-    available_product_id = [12816, 12817, 12818, 14270, 14302]
+    if transaction_type == "conference":
+        available_product_id = [12817, 12818, 14270, 14271]
+        file_name = "Conference.csv"
+    elif transaction_type == "preconference":
+        available_product_id = [12816, 14302]
+        file_name = "preconference.csv"
+    else:
+        available_product_id = [12817, 12818, 14270, 14271, 12816, 14302]
+        file_name = "preconference_and_conference.csv"
+
     only_df = df[
         df["line_items"].apply(lambda x: has_product_id(x, available_product_id))
     ]
     cleaned_data = _cleanup(only_df)
 
-    pd.DataFrame(cleaned_data).to_csv("transaction_pre_conference.csv")
+    pd.DataFrame(cleaned_data).to_csv(file_name)
