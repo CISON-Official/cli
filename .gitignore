@@ -27,3 +27,4 @@ data
 **.ipynb
 test.py
 .cison
+*.sh

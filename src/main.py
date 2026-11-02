@@ -13,9 +13,12 @@ from src.config import (
     CONFIG_DIR,
     ENV_PATH,
     Settings,
-    get_config,
+    get_missing_setting_keys,
+    get_outstanding_setting_keys,
     get_setting_keys,
     is_configured,
+    read_env_values,
+    write_env_values,
 )
 from src.email import app as email_app
 from src.loader import LoggingManager
@@ -53,14 +56,17 @@ def main_check(ctx: typer.Context):
         return
 
     if not is_configured():
+        missing = get_missing_setting_keys()
         typer.secho(
-            "\n[!] CISON CLI is not configured or has missing parameters.",
+            f"\n[!] CISON CLI is not configured ({len(missing)} setting(s) outstanding).",
             fg=typer.colors.YELLOW,
             bold=True,
         )
+        for key in missing:
+            typer.secho(f"    - {key}", fg=typer.colors.YELLOW)
         typer.secho(
-            f"Configuration file check failed at: {ENV_PATH}\n"
-            "Please run the setup command to configure all environment variables:\n\n"
+            f"Configuration file: {ENV_PATH}\n"
+            "Fill in only the outstanding settings with:\n\n"
             "   cison configure\n",
             fg=typer.colors.WHITE,
         )
@@ -70,35 +76,52 @@ def main_check(ctx: typer.Context):
 @app.command("configure")
 def configure(
     overwrite: bool = typer.Option(
-        False, "--overwrite", "-o", help="Overwrite existing configuration from scratch"
+        False,
+        "--overwrite",
+        "-o",
+        help="Re-enter every setting instead of only the outstanding ones",
     ),
 ):
     """
-    Dynamically configure all environment variables defined in Settings.
+    Configure the environment variables defined in Settings.
+
+    Only outstanding (absent or blank) values are prompted for. Values already
+    present are preserved untouched unless --overwrite is given.
     """
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
-    cfg = get_config() if ENV_PATH.exists() else None
 
-    typer.secho(
-        "\n=== Dynamic CISON CLI Configuration ===", fg=typer.colors.CYAN, bold=True
-    )
+    keys = get_setting_keys()
+    exists = ENV_PATH.exists()
+    outstanding = keys if overwrite or not exists else get_outstanding_setting_keys()
+
+    typer.secho("\n=== CISON CLI Configuration ===", fg=typer.colors.CYAN, bold=True)
     typer.secho(f"Target file: {ENV_PATH}\n", fg=typer.colors.WHITE)
 
-    env_data = {}
-    keys = get_setting_keys()
+    if not outstanding:
+        typer.secho(
+            f"✓ All {len(keys)} settings are already configured. Nothing to do.",
+            fg=typer.colors.GREEN,
+            bold=True,
+        )
+        raise typer.Exit(code=0)
 
+    typer.secho(
+        f"{len(outstanding)} of {len(keys)} settings outstanding:",
+        fg=typer.colors.YELLOW,
+    )
+    for key in outstanding:
+        typer.secho(f"  - {key}", fg=typer.colors.YELLOW)
+    typer.secho("")
+
+    existing_values = read_env_values() if exists else {}
     sensitive_keywords = ["SECRET", "KEY", "TOKEN", "PASSWORD"]
 
-    for key in keys:
-        existing_val = ""
-        if cfg and not overwrite:
-            existing_val = cfg(key, default="")
-        if not existing_val:
-            existing_val = getattr(Settings, key, "")
+    env_data: dict[str, str] = {}
 
+    for key in outstanding:
+        existing_val = existing_values.get(key, "")
         is_sensitive = any(kw in key for kw in sensitive_keywords)
 
-        # Prompt user dynamically for each setting variable
         user_val = typer.prompt(
             f"Enter {key}",
             default=existing_val if existing_val else None,
@@ -106,15 +129,17 @@ def configure(
         )
         env_data[key] = str(user_val).strip()
 
-    # Write out .env file dynamically
-    env_content = "\n".join([f"{k}={v}" for k, v in env_data.items()]) + "\n"
-    ENV_PATH.write_text(env_content)
+    write_env_values(env_data)
 
     typer.secho(
-        f"\n✓ Successfully configured {len(keys)} environment parameters at {ENV_PATH}",
+        f"\n✓ Configured {len(env_data)} outstanding setting(s) at {ENV_PATH}",
         fg=typer.colors.GREEN,
         bold=True,
     )
+
+    remaining = get_outstanding_setting_keys()
+    if remaining:
+        typer.secho(f"[!] Still blank: {', '.join(remaining)}", fg=typer.colors.YELLOW)
 
 
 @app.command("update")

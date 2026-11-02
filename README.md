@@ -65,6 +65,11 @@ cison config show
 | `ADMIN_CERTIFICATE_ROUTING_KEY` | RabbitMQ routing key for certificate jobs |
 | `CELERY_HOST` | Celery/RabbitMQ host |
 | `MEMBERSHIP_CERTIFICATION_TASK_NAME` | Name of the membership certification Celery task |
+| `PRECONFERENCE_2025_CERTIFICATION_TASK_NAME` | Name of the preconference 2025 certification Celery task |
+| `PRECONFERENCE_2026_CERTIFICATION_TASK_NAME` | Name of the preconference 2026 certification Celery task |
+| `CONFERENCE_2025_CERTIFICATION_TASK_NAME` | Name of the conference 2025 certification Celery task |
+| `CONFERENCE_2026_CERTIFICATION_TASK_NAME` | Name of the conference 2026 certification Celery task |
+| `FELLOWSHIP_CERTIFICATION_TASK_NAME` | Name of the fellowship certification Celery task |
 | `EMAIL_API_BASE` | Zoho Campaigns API endpoint |
 | `CLIENT_ID` | Zoho OAuth client ID |
 | `CLIENT_SECRET` | Zoho OAuth client secret |
