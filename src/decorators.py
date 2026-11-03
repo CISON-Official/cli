@@ -1,12 +1,33 @@
 import os
 import sys
+import json
+from datetime import datetime
+from functools import wraps
 from collections.abc import Callable
 from contextlib import contextmanager
-from functools import wraps
 
 from requests import Session
 
 from src.config import setting
+
+
+def error_handler(func: Callable) -> Callable:
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            os.makedirs(f"error/{func.__name__}/", exist_ok=True)
+            with open(f"error/{func.__name__}/{datetime.now()}.json", "w") as f:
+                data = {
+                    "name": func.__name__,
+                    "list_args": args,
+                    "key_value_args": kwargs,
+                    "error": str(e.__repr__()),
+                }
+                json.dump(data, f)
+
+    return wrapper
 
 
 def api_caller(func: Callable) -> Callable:

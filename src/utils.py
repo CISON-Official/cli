@@ -329,13 +329,16 @@ def suppress_output():
 
 
 def save_dataframe(
-    data: dict | list,
+    data: dict | list | pd.DataFrame,
     filename: str | None,
     default_name: str,
     output_format: OutputFormat,
 ) -> None:
     """Helper function to load data into a Pandas DataFrame and save to disk."""
-    df = pd.DataFrame(data)
+    if isinstance(data, pd.DataFrame):
+        df = data
+    else:
+        df = pd.DataFrame(data)
 
     # Determine base filename
     target_name = filename if filename else default_name
@@ -376,3 +379,11 @@ def clear_disk_cache(sub_directory: str | None = None) -> int:  # type: ignore
         return 1
 
     return 0
+
+
+def clean_name(name: str) -> str:
+    match name.strip().lower().split(" ")[0]:
+        case "nil" | "." | "" | "-":
+            return ""
+        case _:
+            return name.strip()
