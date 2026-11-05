@@ -14,6 +14,7 @@ from rich.progress import track
 from rich.table import Table
 
 from src.commands.user import User
+from src.utils import clean_name
 from src.config import setting
 from src.decorators import api_caller, silence_stdout
 from src.gui.print import print_error_panel
@@ -122,8 +123,18 @@ class Membership:
             )
         )
 
+        response = session.get(
+            f"{root_url.rstrip("/")}/cert/get-cert-name?member_id={member_id}",
+            headers=get_headers(token),
+        )
+        data = response.json().get("data")
+        if data and data.get("certificate_name"):
+            name = data.get("certificate_name")
+        else:
+            name = f'{clean_name(data.get("first_name"))} {clean_name(data.get("middle_name"))} {clean_name(data.get("last_name"))}'
+
         data = {
-            "name": f"{new_user['surname']} {new_user['firstname']} {new_user['middlename']}",
+            "name": name,
             "current_date": datetime.fromtimestamp(
                 float(new_user["date_issued"])
             ).strftime("%d/%m/%Y"),
