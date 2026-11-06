@@ -1,3 +1,5 @@
+import pdb
+
 import pandas as pd
 import tqdm
 import typer
@@ -186,6 +188,44 @@ class User:
             return None
 
     @staticmethod
+    def get_voters_eligibility(*args, **kwargs):
+        from src.commands.certificates.membership import Membership
+
+        get_cached_certificates = create_disk_cached_function(
+            Membership.get_all_certificates, cache_directory="certificates"
+        )
+
+        get_cached_complete_payment = create_disk_cached_function(
+            Payments.get_users_with_complete_payments, "complete_payment"
+        )
+        complete_payment = pd.DataFrame(get_cached_complete_payment())
+
+        complete_payment.rename(
+            columns=dict(
+                first_name="firstname",
+                last_name="surname",
+                middle_name="middlename",
+                user_email="email",
+                phone_number="phone_number",
+            )
+        )
+
+        certificates = pd.DataFrame(get_cached_certificates()["data"])
+        pdb.set_trace()
+
+        print(certificates.head())
+        print(complete_payment.head())
+        data = (
+            pd.merge(certificates, complete_payment, on="member_id", how="inner")
+            .sort_values(by="surname")
+            .reset_index()
+        )
+        data = data[
+            ["surname", "middlename", "firstname", "member_id", "phone_number", "title"]
+        ]
+        save_dataframe(data, "eligible_voters", "eligible_voters", OutputFormat.csv)
+
+    @staticmethod
     def rename_columns(dp: pd.DataFrame) -> pd.DataFrame:
         return dp.rename(
             columns={
@@ -327,6 +367,7 @@ def complete_payment_with_certificates():
 
     data = pd.DataFrame(response["data"])
     data = User.rename_columns(data)
+    data.to_csv("iwillcatchyou.csv")
 
     complete = []
     certs = get_cached_certificates()
@@ -438,3 +479,8 @@ def get_complete_payments(
         default_name="complete-payments",
         output_format=fmt,
     )
+
+
+@app.command("get-voters")
+def get_eligible_voters() -> None:
+    User.get_voters_eligibility()

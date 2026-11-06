@@ -17,7 +17,7 @@ import pandas as pd
 from requests import Session
 from requests.exceptions import HTTPError
 
-from src.utils import get_headers
+from src.utils import create_disk_cached_function, get_headers
 from src.types import OutputFormat
 from src.utils import save_dataframe
 from src.decorators import api_caller
@@ -224,6 +224,117 @@ def get_people_that_paid_for_preconference_and_conference(
     else:
         available_product_id = [12817, 12818, 14270, 14271, 12816, 14302]
         file_name = "preconference_and_conference.csv"
+
+    only_df = df[
+        df["line_items"].apply(lambda x: has_product_id(x, available_product_id))
+    ]
+    cleaned_data = _cleanup(only_df)
+
+    pd.DataFrame(cleaned_data).to_csv(file_name)
+
+
+@app.command(name="wb", help="the list of people who bought a particular product")
+def get_people_that_paid_for_preconference_and_conference(
+    x: int, product_id: int, file_name: str = "2026_annual.csv"
+):
+    from src.commands.user import User
+
+    def _sync_conference(range_num: int):
+        try:
+            print(f"Getting data for page: {range_num}")
+            return Transactions.get_transactions(per_page=500, page=range_num)[
+                "transactions"
+            ]
+        except Exception:
+            return None
+
+    def has_product_id(line_items_str, target_id):
+        """Checks if a target product_id exists within the line_items list."""
+        try:
+            items = (
+                ast.literal_eval(line_items_str)
+                if isinstance(line_items_str, str)
+                else line_items_str
+            )
+            if isinstance(items, list):
+                return any(int(item.get("product_id")) in target_id for item in items)
+        except Exception:
+            pass
+        return False
+
+    def _cleanup(df_only: pd.DataFrame):
+        all_data = []
+        for _, row in df_only.iterrows():
+            data = {}
+            billing = (
+                ast.literal_eval(row.billing)
+                if isinstance(row.billing, str)
+                else row.billing
+            )
+            data["name"] = billing["full_name"]
+            data["email"] = billing["email"]
+            data["phone"] = billing["phone"]
+            if isinstance(row.line_items, str):
+                items = row.line_items
+            else:
+                items = ast.literal_eval(str(row.line_items))
+            products = [
+                i["name"] for i in items if int(i["product_id"]) in available_product_id
+            ]
+            amount = sum(
+                [
+                    float(i["subtotal"])
+                    for i in items
+                    if int(i["product_id"]) in available_product_id
+                ]
+            )
+
+            data["products"] = products
+            data["amount"] = amount
+            data["order_number"] = row["order_number"]
+
+            _datetime = [j['datetime'] for _, j in row.dates.items()]
+            data['dates'] = _datetime
+
+            all_data.append(data)
+        return all_data
+
+    async def main():
+        tasks = [asyncio.to_thread(_sync_conference, i) for i in range(x)]
+        return await asyncio.gather(*tasks)
+
+    # async def get_member_id(df):
+    #     all_users = pd.DataFrame(User.get_all_users())
+    #     print(all_users.head())
+
+    #     # all_users = User.rename_columns(all_users)
+
+    #     for i in df.email:
+    #         try:
+    #             single_user = all_users[all_users['user_email'] == i]
+    #             User.rename_columns(User.get_user_information(single_user.ID))
+
+    raw_results = asyncio.run(main())
+
+    data = [pd.DataFrame(res) for res in raw_results if res]
+    get_cached_user_info = create_disk_cached_function(
+        User.all_info_about_users, cache_directory=".user_data_cache"
+    )
+    all_users = pd.DataFrame(get_cached_user_info()["data"])
+    print(all_users.head())
+    all_users.to_csv("running.csv")
+
+    df = pd.concat(data, axis=0)
+    # df.to_csv("crasy.csv")
+
+    # pdb.set_trace()
+    print(df.head())
+    df = df[df["status"] == "completed"]
+    df["line_items"] = df["line_items"].apply(
+        lambda x: ast.literal_eval(x) if isinstance(x, str) else x
+    )
+
+    available_product_id = [product_id]
 
     only_df = df[
         df["line_items"].apply(lambda x: has_product_id(x, available_product_id))
