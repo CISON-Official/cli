@@ -6,7 +6,7 @@ import pandas as pd
 
 
 def main() -> None:
-    data = pd.read_csv("preconference.csv")
+    data = pd.read_csv("fellowship.csv")
     i = 0
 
     for _, row in data.iterrows():
@@ -14,19 +14,22 @@ def main() -> None:
         if i < 2:
             continue
         first_name = (
-            str(row["FIRST_NAME"]).strip() if pd.notna(row["FIRST_NAME"]) else ""
+            str(row["Firstname"]).strip() if pd.notna(row["Firstname"]) else ""
         )
         middle_name = (
-            str(row["MIDDLE_NAME"]).strip() if pd.notna(row["MIDDLE_NAME"]) else ""
+            str(row["Middlename"]).strip() if pd.notna(row["Middlename"]) else ""
         )
-        last_name = str(row["LAST_NAME"]).strip() if pd.notna(row["LAST_NAME"]) else ""
+        last_name = str(row["Lastname"]).strip() if pd.notna(row["Lastname"]) else ""
 
         name = " ".join(part for part in (first_name, middle_name, last_name) if part)
 
-        email = str(row["EMAIL"]).strip() if pd.notna(row["EMAIL"]) else ""
-        member_id = row["MEMBER_ID"]
+        email = str(row["Email"]).strip() if pd.notna(row["Email"]) else ""
 
-        if not name or not email:
+        fellowship_id = str(row["Fellowship Number"]).strip() if pd.notna(row["Fellowship Number"]) else ""
+
+        member_id = row["Member ID"]
+
+        if not name or not email or not member_id:
             print(f"Skipping row {_}: missing name or email")
             continue
 
@@ -35,15 +38,21 @@ def main() -> None:
             "run",
             "cison",
             "certificates",
-            "preconference",
-            "2026",
+            "fellowship",
+            "create",
+            "-f",
             name,
+            "-e",
             email,
+            "-i",
+            fellowship_id,
+            "-m",
+            str(int(member_id)),
         ]
 
-        if pd.notna(member_id) and str(member_id).strip():
-            command.append("--member-id")
-            command.append(str(member_id).strip())
+        # if pd.notna(member_id) and str(member_id).strip():
+        #     command.append("--member-id")
+        #     command.append(str(member_id).strip())
 
         print(f"Command is {command}")
         try:

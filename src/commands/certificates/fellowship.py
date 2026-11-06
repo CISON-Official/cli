@@ -87,7 +87,7 @@ class Fellowship:
         cert_name: str,
         registrant_email: str,
         fellowship_id: str,
-        member_id:Optional[int]=None,
+        member_id: Optional[int] = None,
         **kwargs,
     ) -> None:
 
@@ -105,7 +105,7 @@ class Fellowship:
             if data and data.get("certificate_name"):
                 name = data.get("certificate_name")
             else:
-                 name = f'{clean_name(data.get("first_name"))} {clean_name(data.get("middle_name"))} {clean_name(data.get("last_name"))}'
+                name = f'{clean_name(data.get("first_name"))} {clean_name(data.get("middle_name"))} {clean_name(data.get("last_name"))}'
 
             email = data.get("email")
         else:
@@ -137,12 +137,14 @@ def create_certificate(
     fellowship_id: str = typer.Option(
         ..., "--fellowship-id", "-i", help="Fellowship ID"
     ),
+    member_id: str = typer.Option(..., "--member-id", "-m", help="Member id"),
 ):
 
     Fellowship.create_certificate(
         cert_name=name,
         registrant_email=email,
         fellowship_id=fellowship_id,
+        member_id=member_id,
     )
 
 
