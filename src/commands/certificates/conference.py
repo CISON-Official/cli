@@ -5,9 +5,9 @@ import uuid
 
 import pika
 import typer
-from requests import Session
 from rich import print
 from rich.console import Console
+from requests import Session, Response
 
 from src.config import setting
 from src.decorators import api_caller
@@ -31,7 +31,7 @@ def resolve_task_name(setting_name: str, year: int) -> str:
     return task_name
 
 
-def api_error_message(response: Session) -> str:
+def api_error_message(response: Response) -> str:
     try:
         body = response.json()
     except ValueError:
@@ -85,11 +85,10 @@ class Conference:
     @api_caller
     @staticmethod
     def create_2025_certificate(
-        first_name: str,
-        surname: str,
+        cert_name: str,
         registrant_email: str,
-        order_id: int = 0,
-        cert_name: str | None = None,
+        order_id: int,
+        member_id: str | None = None,
         **kwargs,
     ) -> None:
 
@@ -97,21 +96,31 @@ class Conference:
         token: str = kwargs["token"]
         root_url: str = kwargs["root_url"]
 
-        # 'email' cannot be used as a parameter name here: api_caller injects the
-        # admin's own email into kwargs under that key.
-        email = registrant_email
+        print(f"Recording 2025 conference registration...")
 
-        print(f"Recording 2025 conference registration for {email}...")
+        if member_id:
+            cert_response = session.get(
+                f"{root_url.rstrip("/")}/cert/get-cert-name?member_id={member_id}",
+                headers=get_headers(token),
+            )
+            data = cert_response.json().get("data")
+            if data and data.get("certificate_name"):
+                name = data.get("certificate_name")
+            else:
+                name = f'{clean_name(data.get("first_name"))} {clean_name(data.get("middle_name"))} {clean_name(data.get("last_name"))}'
 
-        payload: dict[str, object] = {
-            "email": email,
-            "first_name": first_name,
-            "surname": surname,
-            "order_id": int(order_id),
-        }
+            email = data.get("email")
+        else:
+            name = cert_name
+            email = registrant_email
 
-        if cert_name:
-            payload["cert_name"] = cert_name
+        payload = dict(
+            name=name,
+            certificate_id=order_id,
+            email=email,
+            first_name=name.split(" ")[0],
+            surname=name.split(" ")[-1],
+        )
 
         response = session.post(
             f"{root_url.rstrip('/')}/cert/add-2025-conference",
@@ -143,32 +152,21 @@ class Conference:
             f"[green]✔[/green] 2025 conference registration saved for {email}"
         )
 
-        task_name = resolve_task_name(
-            "CONFERENCE_2025_CERTIFICATION_TASK_NAME", 2025
-        )
+        task_name = resolve_task_name("CONFERENCE_2025_CERTIFICATION_TASK_NAME", 2025)
 
-        publish(
-            task_name,
-            {
-                "name": f"{first_name} {surname}",
-                "email": email,
-            },
-        )
+        publish(task_name, payload)
 
-        console.print(
-            f"[green]✔[/green] 2025 conference certificate queued for "
-            f"{first_name} {surname}"
-        )
+        console.print(f"[green]✔[/green] 2025 conference certificate queued for {name}")
 
     @api_caller
     @staticmethod
-    def create_2026_certificate(cert_name: str, registrant_email: str, member_id: Optional[int]=None, **kwargs) -> None:
+    def create_2026_certificate(
+        cert_name: str, registrant_email: str, member_id: Optional[int] = None, **kwargs
+    ) -> None:
 
         print("Creating 2026 conference certificate...")
 
-        task_name = resolve_task_name(
-            "CONFERENCE_2026_CERTIFICATION_TASK_NAME", 2026
-        )
+        task_name = resolve_task_name("CONFERENCE_2026_CERTIFICATION_TASK_NAME", 2026)
 
         session: Session = kwargs["session"]
         token: str = kwargs["token"]
@@ -184,7 +182,7 @@ class Conference:
             if data and data.get("certificate_name"):
                 name = data.get("certificate_name")
             else:
-                 name = f'{clean_name(data.get("first_name"))} {clean_name(data.get("middle_name"))} {clean_name(data.get("last_name"))}'
+                name = f'{clean_name(data.get("first_name"))} {clean_name(data.get("middle_name"))} {clean_name(data.get("last_name"))}'
 
             email = data.get("email")
         else:
@@ -200,9 +198,7 @@ class Conference:
             },
         )
 
-        console.print(
-            f"[green]✔ 2026 conference certificate queued for {name}[/green]"
-        )
+        console.print(f"[green]✔ 2026 conference certificate queued for {name}[/green]")
 
 
 @app.command(
@@ -210,21 +206,16 @@ class Conference:
     help="Register a paid 2025 conference attendee and queue their certificate",
 )
 def create_2025_certificate(
-    first_name: str = typer.Option(..., "--first-name", "-f", help="First name"),
-    surname: str = typer.Option(..., "--surname", "-s", help="Surname / last name"),
-    email: str = typer.Option(..., "--email", "-e", help="Registrant's e-mail"),
-    order_id: int = typer.Option(0, "--order-id", "-o", help="Payment order reference"),
-    cert_name: str | None = typer.Option(
-        None, "--cert-name", "-c", help="Certificate file name, e.g. cert_2025.pdf"
+    name: str = typer.Argument(..., help="certificate name"),
+    email: str = typer.Argument(..., help="Registrant's e-mail"),
+    order_id: int = typer.Argument(..., help="Payment order reference"),
+    member_id: Optional[int] = typer.Option(
+        None, "-m", "--member-id", help="Member ID of the certificate holder"
     ),
 ):
 
     Conference.create_2025_certificate(
-        first_name=first_name,
-        surname=surname,
-        registrant_email=email,
-        order_id=order_id,
-        cert_name=cert_name,
+        cert_name=name, registrant_email=email, order_id=order_id, member_id=member_id
     )
 
 
@@ -235,7 +226,11 @@ def create_2025_certificate(
 def create_2026_certificate(
     name: str = typer.Argument(..., help="Name of the certificate holder"),
     email: str = typer.Argument(..., help="Email of the certificate holder"),
-    member_id: Optional[int] = typer.Option(None, '-m', '--member-id', help="Member ID of the certificate holder"),
+    member_id: Optional[int] = typer.Option(
+        None, "-m", "--member-id", help="Member ID of the certificate holder"
+    ),
 ):
 
-    Conference.create_2026_certificate(cert_name=name, registrant_email=email, member_id=member_id)
+    Conference.create_2026_certificate(
+        cert_name=name, registrant_email=email, member_id=member_id
+    )
