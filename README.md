@@ -70,6 +70,7 @@ cison config show
 | `CONFERENCE_2025_CERTIFICATION_TASK_NAME` | Name of the conference 2025 certification Celery task |
 | `CONFERENCE_2026_CERTIFICATION_TASK_NAME` | Name of the conference 2026 certification Celery task |
 | `FELLOWSHIP_CERTIFICATION_TASK_NAME` | Name of the fellowship certification Celery task |
+| `STUDENT_CERTIFICATION_TASK_NAME` | Name of the student certification Celery task |
 | `EMAIL_API_BASE` | Zoho Campaigns API endpoint |
 | `CLIENT_ID` | Zoho OAuth client ID |
 | `CLIENT_SECRET` | Zoho OAuth client secret |
@@ -130,6 +131,9 @@ Each accepts `--filename/-f` for the output name and `--format/-fmt` in `csv`, `
 | `cison certificates membership get-eligible` | List members currently eligible for a certificate |
 | `cison certificates membership bulk-create-certificate <member_ids...>` | Create certificates for many members at once |
 | `cison certificates membership all` | Export all certificates to a CSV file |
+| `cison certificates student eligible` | List students currently eligible for a student certificate |
+| `cison certificates student create <member_id>` | Create and queue a student certificate |
+| `cison certificates student delete <member_id>` | Delete a student certificate |
 
 ### Transactions
 
